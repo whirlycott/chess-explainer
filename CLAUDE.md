@@ -1,8 +1,8 @@
 # Chess Strategy Explorer
 
-Browser chess trainer that teaches 50 strategies to middle-schoolers. Vite + TypeScript + Lit,
+Browser chess trainer that teaches 56 Core Path strategies and 11 named openings to middle-schoolers. Vite + TypeScript + Lit,
 chess.js for rules, optional Three.js 3D board. Design and pedagogy: `docs/PLAN.md` and
-`docs/EDUCATION_REVIEW.md`.
+`docs/EDUCATION_REVIEW.md` (core) and `docs/OPENINGS_REVIEW.md` (named openings and defence).
 
 ## Commands
 
@@ -16,8 +16,9 @@ chess.js for rules, optional Three.js 3D board. Design and pedagogy: `docs/PLAN.
 
 ## Layout
 
-- `src/data/lessons/*.ts` — the 50 lessons, one file per category. `src/data/index.ts` holds categories,
-  the learning path (`PATH`) and groups of easily-confused strategies (`CONFUSABLE`).
+- `src/data/lessons/*.ts` — the 56 Core Path lessons, one file per category, plus `openings.ts` (11 named openings).
+  `src/data/index.ts` holds categories, the learning path (`PATH`, core only), groups of easily-confused strategies
+  (`CONFUSABLE`), and the opening helpers (`OPENING_LESSONS`, `repertoireOptions`, `STARTER_KIT`).
 - `src/logic/` — pure, tested logic: positions, puzzle judging, Leitner progress, quiz building, piece tracking,
   speech and sound.
 - `src/ui/` — Lit components: boards (2D `chess-board`, 3D `chess-board-3d`, switcher `board-view`),
@@ -33,3 +34,7 @@ chess.js for rules, optional Three.js 3D board. Design and pedagogy: `docs/PLAN.
 - Puzzle `lines` end on the learner's move; a final mating move accepts any checkmate.
 - Mark puzzles `kind: 'plan'` when several good moves exist; `'tactic'` when the engine's best move is the answer.
 - Narration voices must be on-device only (`localService`); never send text to network voices.
+- Named openings (`opening` field) are taught as defining moves plus a plan, never long lines. Each has a
+  "Meeting it" walkthrough shown from the other side and its own puzzle. Opening puzzles are `kind: 'plan'`
+  unless one move is clearly best. They stay out of the Core Path and core mastery; only the learner's
+  three repertoire openings enter Daily Review (at most 3 a day).

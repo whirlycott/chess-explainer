@@ -1,13 +1,16 @@
 # Chess Strategy Explorer
 
-Learn 50 well-known chess strategies, move by move. Built for middle-school learners using
+Learn 56 well-known chess strategies on the Core Path, plus 11 named openings, move by move. Built for middle-school learners using
 research-backed methods: worked examples, prediction, self-explanation, retrieval practice,
 spaced review and interleaved quizzes.
 
-- 6 categories: Thinking Habits, Opening Principles, Tactics, Checkmate Patterns, Middlegame Strategy, Endgames
+- 6 core categories: Thinking Habits, Opening Principles, Tactics, Checkmate Patterns, Middlegame Strategy, Endgames,
+  including defence (meeting threats, escaping check, breaking pins, blockades, swindles)
+- Named Openings side quest: 11 openings taught as ideas and plans, each with how to meet it from the other side,
+  and a three-opening repertoire that feeds Daily Review
 - Every lesson: big idea → cues → narrated worked example with "predict the move" steps → why it works →
   common mistake → puzzles → quick check
-- Practice: Daily Review (spaced repetition), Mixed Practice, Name That Strategy, Find the Move
+- Practice: Daily Review (spaced repetition), Mixed Practice, Name That Strategy, Find the Move, Name That Opening
 - Optional narration (on-device voices only), optional 3D board, keyboard move entry
 - Progress is stored only in your browser
 

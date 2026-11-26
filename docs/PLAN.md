@@ -1,12 +1,15 @@
 # Chess Strategy Explorer — Plan
 
 A browser-based chess trainer that walks a learner (target: middle school, ages ~11–14)
-through 50 well-known chess strategies, organised by category, with move-by-move
+through 56 well-known chess strategies on the Core Path, organised by category, plus an optional
+section of 11 named openings, with move-by-move
 walkthroughs, optional spoken narration, and quizzes that build mastery of *which*
 strategy to use and *how* to use it.
 
 This plan was reviewed by an education expert; the full review is in
 [`EDUCATION_REVIEW.md`](./EDUCATION_REVIEW.md). Section 8 lists what changed because of it.
+A second review covered named openings and defence: [`OPENINGS_REVIEW.md`](./OPENINGS_REVIEW.md), with
+the changes in section 9.
 
 ## 1. Audience & goals
 
@@ -64,18 +67,25 @@ that chess improves maths or IQ (little far transfer: Sala & Gobet, 2016).
   - Wrong → down **one** box (min 1) and due today.
   - A puzzle solved after using **2+ hints** does not count as correct.
 - **Mastered** = box ≥ 5 **and** ≥ 2 different positions solved **and** ≥ 1 *Find the move* success.
+- **Named openings** are mastered at box ≥ 5 once solved from **both sides** (a main puzzle and the
+  "Meeting it" puzzle) **and** the plan question ("Which opening is aiming for this plan?") is answered.
+  Only the learner's three repertoire openings enter Daily Review, at most 3 per day.
 - Overlapping strategies (e.g. a double check is also a discovered check) are never offered as
   competing answers.
 - All progress is stored in `localStorage`; nothing leaves the device.
 
-## 5. The 50 strategies (6 categories) and learning path
+## 5. The Core Path: 56 strategies (6 categories) and learning path
 
-**Thinking Habits (3):** Piece Values & Loose Pieces · Checks, Captures, Threats · Prophylaxis
+The app started with "the top 50". The openings review recommended dropping a fixed number, so the core is
+now called the **Core Path**.
+
+**Thinking Habits (5):** Piece Values & Loose Pieces · Checks, Captures, Threats · Meet the Threat ·
+Escape from Check (Capture, Block, Run) · Prophylaxis
 
 **Opening Principles (6):** Control the Center · Develop Your Pieces (don't move one piece twice
 without a reason) · Castle Early · Don't Bring the Queen Out Early · Connect Your Rooks · The Fianchetto
 
-**Tactics (14):** Fork · Pin · Skewer · Discovered Attack · Discovered Check · Double Check ·
+**Tactics (15):** Fork · Pin · Breaking a Pin · Skewer · Discovered Attack · Discovered Check · Double Check ·
 Removing the Defender · Deflection · Decoy · Overloading · In-Between Move (Zwischenzug) ·
 Trapped Piece · Greek Gift Sacrifice · Perpetual Check
 
@@ -83,16 +93,33 @@ Trapped Piece · Greek Gift Sacrifice · Perpetual Check
 Scholar's & Fool's Mate · Ladder Mate · Smothered Mate · Anastasia's Mate · Arabian Mate ·
 Boden's Mate · Légal's Mate
 
-**Middlegame Strategy (10):** Knight Outpost · Rooks on Open Files · Rook on the Seventh ·
+**Middlegame Strategy (12):** Knight Outpost · Rooks on Open Files · Rook on the Seventh ·
 The Bishop Pair · Good vs. Bad Bishop · Weak Squares · Isolated Queen's Pawn · Doubled Pawns ·
-Passed Pawns · Pawn Storm
+Passed Pawns · Blockade · Pawn Storm · Trade Off the Attackers
 
-**Endgames (7):** Activate Your King · The Opposition · Rule of the Square · Avoid Stalemate ·
-Trade When Ahead · Lucena (Build a Bridge) · Philidor Defense
+**Endgames (8):** Activate Your King · The Opposition · Rule of the Square · Avoid Stalemate ·
+Swindles: the Stalemate Trick · Trade When Ahead · Lucena (Build a Bridge) · Philidor Position
 
 Each lesson is tagged Beginner / Intermediate / Advanced. The default **path** (six stages that
 mix categories) follows the review's recommended order; free choice by category is always available.
 The exact list lives in `src/data/index.ts` (`PATH`).
+
+### Named Openings (separate, optional; 11)
+
+Taught as defining moves plus a plan and one trap, each with a "Meeting it" walkthrough and puzzle from the
+other side of the board. Suggested after Stage 2; not part of the Core Path or core mastery.
+
+- **Tier 1 · Starter** (after Stage 2): Italian Game · Scotch Game · London System · Queen's Gambit ·
+  Scandinavian Defense
+- **Tier 2 · Club** (after Stage 4): Ruy Lopez · French Defense · Caro-Kann Defense
+- **Tier 3 · Recognise first** (after Stage 5): Sicilian Defense · King's Indian Defense · English Opening
+
+The learner picks a three-opening repertoire (as White, against 1.e4, against 1.d4); a starter kit is
+offered: Italian Game, the Two Knights Defense, and the Queen's Gambit Declined.
+
+**Evidence note:** no controlled study has tested how children should learn named openings. The approach
+follows coaching consensus (Heisman, Seirawan, the Steps Method) plus general research on meaningful
+learning (Mayer 2002), templates (Gobet & Simon 1996) and case comparison (Alfieri et al. 2013).
 
 ## 6. Truth-grounding the chess content
 
@@ -138,3 +165,23 @@ Not yet done (good next steps):
   (100 positions total). The data format supports adding more without code changes.
 - A second worked example per lesson, "fork or not?" non-examples, and "Watch out" as a find-the-error item.
 - Stored refutations for common wrong puzzle moves; parent mode.
+
+## 9. Changes made after the openings and defence review
+
+Done:
+- Named Openings section (11 lessons in 3 tiers) outside the Core Path, with its own page, progress table,
+  repertoire picker and starter kit; "Meeting it" walkthrough and puzzle for each, framed as "Meeting",
+  not "Beating".
+- Openings mastery and Daily Review rules (section 4); *Name That Opening* uses only defining positions,
+  with confusable sets; "Which opening is aiming for this plan?" replaces any "suits your style" wording.
+- Six core defence lessons: Meet the Threat, Escape from Check, Breaking a Pin, Trade Off the Attackers,
+  Swindles: the Stalemate Trick, Blockade. The core is now 56 lessons ("Core Path").
+- Renamed the endgame "Philidor Defense" to "Philidor Position", to avoid confusion with the opening.
+- The "How it works" page states that no study has tested teaching named openings to children, and that
+  the emphasis on defence rests on coach consensus.
+
+Not yet done (nice to have):
+- Optional Advanced lessons: Fortress, Give Material Back.
+- Defensive "make luft in time" puzzles in the back-rank lesson.
+- Letting a learner skip the opening walkthrough after solving its first puzzle without hints
+  (a "skip to the puzzle" link is offered in the "Meeting it" section).
