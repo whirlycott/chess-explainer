@@ -1,4 +1,5 @@
 import { LitElement, css, html, svg, nothing, type PropertyValues } from 'lit';
+import { repeat } from 'lit/directives/repeat.js';
 import { Chess, type Square } from 'chess.js';
 import type { Arrow } from '../data/types';
 import { track, type TrackedPiece } from '../logic/diff';
@@ -242,7 +243,7 @@ export class ChessBoard extends LitElement {
     >
       <div class="squares">${squares}</div>
       <div class="pieces">
-        ${this._pieces.map((p) => {
+        ${repeat(this._pieces, (p) => p.id, (p) => {
           const [x, y] = this.xy(p.square);
           const dragging = this._drag?.id === p.id;
           const style = dragging
