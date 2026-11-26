@@ -1,10 +1,10 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { Chess } from 'chess.js';
-import { CATEGORIES, PATH, lessonById, lessonsIn } from '../../data';
-import { dueLessons, getLesson, status, weeklyCount, WEEKLY_GOAL } from '../../logic/progress';
+import { CATEGORIES, OPENINGS_CATEGORY, OPENING_LESSONS, PATH, lessonById, lessonsIn } from '../../data';
+import { getLesson, status, weeklyCount, WEEKLY_GOAL } from '../../logic/progress';
 import { pieceSvg } from '../pieces';
 import { shared } from '../shared';
-import { StoreController, store } from '../store';
+import { StoreController, dueToday, statusOf, store } from '../store';
 import '../chess-board';
 
 // A short famous game that loops on the home page board (Légal's Mate).
@@ -54,13 +54,13 @@ export class HomeView extends LitElement {
   render() {
     const demo = this.demo();
     const next = lessonById(this.nextLesson())!;
-    const due = dueLessons(store.state, store.today).length;
+    const due = dueToday().length;
     const week = weeklyCount(store.state, store.today);
     const started = Object.values(store.state.lessons).some((l) => l.lessonDone);
     return html`
       <section class="hero">
         <div class="copy">
-          <p class="eyebrow">50 strategies · step by step</p>
+          <p class="eyebrow">The Core Path · ${PATH.flatMap((s) => s.ids).length} strategies · step by step</p>
           <h1>Learn to think like a <span class="glow">chess master</span>.</h1>
           <p class="lead">
             Watch each strategy move by move, predict the next move, then prove you've got it with puzzles and spaced
@@ -85,7 +85,7 @@ export class HomeView extends LitElement {
       </section>
 
       <section>
-        <h2 class="section">Your learning path</h2>
+        <h2 class="section">Your learning path: the Core Path</h2>
         <div class="path">
           ${PATH.map(
             (stage, si) => html`<article class="card stage">
@@ -102,6 +102,24 @@ export class HomeView extends LitElement {
             </article>`,
           )}
         </div>
+      </section>
+
+      <section>
+        <a class="card openings" href="#/openings" style="--hue:${OPENINGS_CATEGORY.hue}">
+          <div class="emblem">${pieceSvg('w', OPENINGS_CATEGORY.icon)}</div>
+          <div>
+            <p class="eyebrow">Side quest · suggested after Stage 2</p>
+            <h3>${OPENINGS_CATEGORY.title} & My Repertoire</h3>
+            <p class="muted">
+              ${OPENING_LESSONS.length} famous openings as ideas and plans, from the Italian Game to the English, and how
+              to meet each one from the other side.
+            </p>
+            <p class="small muted">
+              ${OPENING_LESSONS.filter((l) => statusOf(l.id) === 'mastered').length} mastered ·
+              ${Object.values(store.state.repertoire).filter(Boolean).length} of 3 repertoire slots chosen
+            </p>
+          </div>
+        </a>
       </section>
 
       <section>
@@ -288,6 +306,31 @@ export class HomeView extends LitElement {
         &.mastered {
           border-color: var(--good);
           background: color-mix(in oklch, var(--good) 20%, transparent);
+        }
+      }
+      .openings {
+        display: flex;
+        gap: 1.2rem;
+        align-items: center;
+        padding: 1.4rem;
+        text-decoration: none;
+        color: inherit;
+        border-color: oklch(0.7 0.12 var(--hue) / 0.45);
+        background:
+          radial-gradient(120% 140% at 0% 0%, oklch(0.6 0.15 var(--hue) / 0.22), transparent 60%),
+          var(--glass);
+        transition: transform 0.25s, box-shadow 0.25s;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 18px 40px -16px oklch(0.6 0.2 var(--hue) / 0.55);
+        }
+        h3 {
+          font-size: 1.35rem;
+          margin: 0.2rem 0;
+        }
+        p {
+          margin: 0.2rem 0;
         }
       }
       .cats {

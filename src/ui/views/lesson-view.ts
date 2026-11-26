@@ -1,7 +1,7 @@
 import { LitElement, css, html, nothing, type PropertyValues } from 'lit';
 import { Chess } from 'chess.js';
-import { PATH, categoryById, lessonById } from '../../data';
-import type { Lesson, Step } from '../../data/types';
+import { OPENING_LESSONS, PATH, categoryById, lessonById } from '../../data';
+import type { Lesson, Step, Walkthrough } from '../../data/types';
 import { resolveStart, sanToWords } from '../../logic/position';
 import { completeLesson, recordAnswer } from '../../logic/progress';
 import type { BoardMoveDetail } from '../chess-board';
@@ -13,7 +13,7 @@ import '../board-view';
 import '../multi-choice';
 import '../puzzle-runner';
 
-type Phase = 'intro' | 'example' | 'explain' | 'watch' | 'practice' | 'check' | 'done';
+type Phase = 'intro' | 'example' | 'explain' | 'watch' | 'practice' | 'meet' | 'meet-practice' | 'check' | 'done';
 const PHASES: { id: Phase; label: string }[] = [
   { id: 'intro', label: 'Big idea' },
   { id: 'example', label: 'Watch' },
@@ -22,6 +22,13 @@ const PHASES: { id: Phase; label: string }[] = [
   { id: 'practice', label: 'Your turn' },
   { id: 'check', label: 'Quick check' },
 ];
+
+/** Named openings add a "Meeting it" phase (walkthrough, then puzzle) before the quick check. */
+function phasesFor(lesson: Lesson): { id: Phase; label: string }[] {
+  if (!lesson.opening) return PHASES;
+  const i = PHASES.findIndex((p) => p.id === 'check');
+  return [...PHASES.slice(0, i), { id: 'meet', label: 'Meeting it' }, ...PHASES.slice(i)];
+}
 
 interface Frame {
   before: string;
@@ -55,7 +62,7 @@ export class LessonView extends LitElement {
   protected readonly _store = new StoreController(this);
   private frames: Frame[] = [];
   private onKey = (e: KeyboardEvent) => {
-    if (this._phase !== 'example' || (e.target as HTMLElement)?.tagName === 'INPUT') return;
+    if ((this._phase !== 'example' && this._phase !== 'meet') || (e.target as HTMLElement)?.tagName === 'INPUT') return;
     if (e.key === 'ArrowRight') this.next();
     if (e.key === 'ArrowLeft') this.back();
   };
@@ -95,15 +102,21 @@ export class LessonView extends LitElement {
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('lessonId') && this.lesson) {
       this.resetState();
-      this.buildFrames(this.lesson);
+      this.buildFrames(this.lesson.walkthrough);
       narrate(`${this.lesson.title}. ${this.lesson.bigIdea}`);
     }
   }
 
-  private buildFrames(lesson: Lesson): void {
-    const g = resolveStart(lesson.walkthrough);
+  /** The walkthrough on screen: the main example, or the "Meeting it" example. */
+  private get walk(): Walkthrough {
+    const l = this.lesson!;
+    return this._phase === 'meet' && l.opening ? l.opening.meeting.walkthrough : l.walkthrough;
+  }
+
+  private buildFrames(walkthrough: Walkthrough): void {
+    const g = resolveStart(walkthrough);
     let last: [string, string] | null = null;
-    this.frames = lesson.walkthrough.steps.map((s) => {
+    this.frames = walkthrough.steps.map((s) => {
       const before = g.fen();
       if (s.san) {
         const m = g.move(s.san);
@@ -114,7 +127,7 @@ export class LessonView extends LitElement {
   }
 
   private get orientation(): 'white' | 'black' {
-    const w = this.lesson!.walkthrough;
+    const w = this.walk;
     return w.orientation ?? (resolveStart(w).turn() === 'w' ? 'white' : 'black');
   }
 
@@ -124,7 +137,12 @@ export class LessonView extends LitElement {
     this._answered = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     const l = this.lesson!;
-    if (p === 'example') this.enterStep(0);
+    if (p === 'meet-practice') this._puzzleDone = false;
+    if (p === 'example' || p === 'meet') {
+      this.buildFrames(this.walk);
+      if (p === 'meet') narrate(`${l.opening!.meeting.title}. ${l.opening!.meeting.idea}`);
+      this.enterStep(0, p === 'example');
+    }
     if (p === 'watch') narrate(`Watch out! ${l.mistake}`);
     if (p === 'done') {
       store.update((s) => completeLesson(s, l.id, store.today));
@@ -137,22 +155,25 @@ export class LessonView extends LitElement {
     narrate(step.san ? `${sanToWords(step.san)}. ${step.say}` : step.say);
   }
 
-  private enterStep(i: number): void {
+  private enterStep(i: number, speakNow = true): void {
     this._step = i;
     this._expanded = false;
-    const step = this.lesson!.walkthrough.steps[i];
+    const step = this.walk.steps[i];
     this._predictOpen = !!step.predict;
     this._predictNote = '';
-    if (step.predict) narrate(step.predict);
-    else this.narrateStep(step);
+    // When a phase introduction is being read aloud, the first step is not narrated over it.
+    if (speakNow) {
+      if (step.predict) narrate(step.predict);
+      else this.narrateStep(step);
+    }
     if (step.san && !step.predict) playSfx(step.san.includes('x') ? 'capture' : 'move');
   }
 
   private next(): void {
-    const steps = this.lesson!.walkthrough.steps;
+    const steps = this.walk.steps;
     if (this._predictOpen) return this.reveal('');
     if (this._step < steps.length - 1) this.enterStep(this._step + 1);
-    else this.setPhase('explain');
+    else this.setPhase(this._phase === 'meet' ? 'meet-practice' : 'explain');
   }
 
   private back(): void {
@@ -160,7 +181,7 @@ export class LessonView extends LitElement {
   }
 
   private reveal(note: string): void {
-    const step = this.lesson!.walkthrough.steps[this._step];
+    const step = this.walk.steps[this._step];
     this._predictOpen = false;
     this._predictNote = note;
     playSfx(step.san!.includes('x') ? 'capture' : 'move');
@@ -168,7 +189,7 @@ export class LessonView extends LitElement {
   }
 
   private onPredict(e: CustomEvent<BoardMoveDetail>): void {
-    const step = this.lesson!.walkthrough.steps[this._step];
+    const step = this.walk.steps[this._step];
     if (e.detail.san === step.san) {
       playSfx('success');
       this.reveal('Yes! You found it.');
@@ -183,11 +204,12 @@ export class LessonView extends LitElement {
   private onPuzzleDone(e: CustomEvent<PuzzleDoneDetail>): void {
     const l = this.lesson!;
     this._puzzleDone = true;
+    const positionKey = this._phase === 'meet-practice' ? `${l.id}:m0` : `${l.id}:p${this._puzzle}`;
     store.update((s) =>
       recordAnswer(
         s,
         l.id,
-        { correct: e.detail.correct, type: 'move', positionKey: `${l.id}:p${this._puzzle}`, hintsUsed: e.detail.hintsUsed },
+        { correct: e.detail.correct, type: 'move', positionKey, hintsUsed: e.detail.hintsUsed },
         store.today,
       ),
     );
@@ -200,7 +222,7 @@ export class LessonView extends LitElement {
   }
 
   private nextInPath(): string | undefined {
-    const ids = PATH.flatMap((s) => s.ids);
+    const ids = this.lesson?.opening ? OPENING_LESSONS.map((l) => l.id) : PATH.flatMap((s) => s.ids);
     const i = ids.indexOf(this.lessonId);
     return ids.slice(i + 1).find((id) => !store.state.lessons[id]?.lessonDone) ?? ids[i + 1];
   }
@@ -211,18 +233,21 @@ export class LessonView extends LitElement {
     const l = this.lesson;
     if (!l) return html`<p>Lesson not found. <a href="#/">Go home</a></p>`;
     const cat = categoryById(l.category);
-    const phaseIndex = PHASES.findIndex((p) => p.id === this._phase);
+    const phases = phasesFor(l);
+    const current = this._phase === 'meet-practice' ? 'meet' : this._phase;
+    const phaseIndex = phases.findIndex((p) => p.id === current);
+    const back = l.opening ? '#/openings' : `#/category/${cat.id}`;
     return html`
       <div class="lesson" style="--hue:${cat.hue}">
         <header class="top">
-          <a class="crumb" href="#/category/${cat.id}">← ${cat.title}</a>
+          <a class="crumb" href=${back}>← ${cat.title}</a>
           <div class="titlebar">
             <h1>${l.title}</h1>
             <span class="chip" style="--chip: oklch(0.75 0.15 ${LEVEL_HUES[l.level]})">${LEVEL_NAMES[l.level]}</span>
           </div>
           ${l.aka ? html`<p class="aka muted">${l.aka}</p>` : nothing}
           <ol class="phases" aria-label="Lesson steps">
-            ${PHASES.map(
+            ${phases.map(
               (p, i) => html`<li class=${i < phaseIndex || this._phase === 'done' ? 'past' : i === phaseIndex ? 'now' : ''}>
                 <span>${i + 1}</span>${p.label}
               </li>`,
@@ -247,7 +272,7 @@ export class LessonView extends LitElement {
           <button class="btn primary" @click=${() => this.setPhase('example')}>Watch the example →</button>
         </section>`;
       case 'example':
-        return this.renderExample(l);
+        return this.renderExample();
       case 'explain':
         return html`<section class="card pad">
           <p class="eyebrow">Why does it work?</p>
@@ -277,7 +302,7 @@ export class LessonView extends LitElement {
           <p class="eyebrow">Your turn · puzzle ${this._puzzle + 1} of ${l.puzzles.length}</p>
           <puzzle-runner
             .puzzle=${l.puzzles[this._puzzle]}
-            .praise=${`Nice! You used the ${l.title.replace(/^The /, '').toLowerCase()} idea.`}
+            .praise=${l.opening ? `Nice! That is the ${l.title} plan.` : `Nice! You used the ${l.title.replace(/^The /, '').toLowerCase()} idea.`}
             @puzzle-done=${this.onPuzzleDone}
           ></puzzle-runner>
           <div class="nav">
@@ -286,15 +311,35 @@ export class LessonView extends LitElement {
               ?disabled=${!this._puzzleDone}
               @click=${() => {
                 quiet();
-                if (last) this.setPhase('check');
+                if (last) this.setPhase(l.opening ? 'meet' : 'check');
                 else {
                   this._puzzle += 1;
                   this._puzzleDone = false;
                 }
               }}
             >
-              ${last ? 'Quick check →' : 'Next puzzle →'}
+              ${last ? (l.opening ? 'Now see the other side →' : 'Quick check →') : 'Next puzzle →'}
             </button>
+          </div>
+        </section>`;
+      }
+      case 'meet': {
+        const m = l.opening!.meeting;
+        return html`<section class="card pad meet-intro">
+            <p class="eyebrow">Meeting it · seen from the other side</p>
+            <h2>${m.title}</h2>
+            <p>${m.idea}</p>
+            <button class="link" @click=${() => this.setPhase('meet-practice')}>Already know it? Skip to the puzzle</button>
+          </section>
+          ${this.renderExample()}`;
+      }
+      case 'meet-practice': {
+        const m = l.opening!.meeting;
+        return html`<section>
+          <p class="eyebrow">Meeting it · your turn</p>
+          <puzzle-runner .puzzle=${m.puzzle} .praise=${`Nice! You know how to meet the ${l.title}.`} @puzzle-done=${this.onPuzzleDone}></puzzle-runner>
+          <div class="nav">
+            <button class="btn primary" ?disabled=${!this._puzzleDone} @click=${() => this.setPhase('check')}>Quick check →</button>
           </div>
         </section>`;
       }
@@ -308,18 +353,26 @@ export class LessonView extends LitElement {
         </section>`;
       case 'done': {
         const next = this.nextInPath();
+        const inRepertoire = Object.values(store.state.repertoire).includes(l.id);
         return html`<section class="card pad done">
           <div class="burst" aria-hidden="true">${Array.from({ length: 18 }, (_, i) => html`<i style="--i:${i}"></i>`)}</div>
           <h2>Lesson complete!</h2>
-          <p>
-            You learned <strong>${l.title}</strong>. It is now in your review schedule. Practising it again on a later day
-            is what makes it stick, so come back for Daily Review.
-          </p>
+          ${l.opening && !inRepertoire
+            ? html`<p>
+                You learned <strong>${l.title}</strong>. Openings come back in Daily Review only if they are in your
+                repertoire. <a href="#/openings">Choose your repertoire</a>, or practise with Name That Opening.
+              </p>`
+            : html`<p>
+                You learned <strong>${l.title}</strong>. It is now in your review schedule. Practising it again on a later
+                day is what makes it stick, so come back for Daily Review.
+              </p>`}
           <div class="row">
             ${next
               ? html`<button class="btn primary" @click=${() => go(`#/lesson/${next}`)}>Next: ${lessonById(next)!.title} →</button>`
               : nothing}
-            <button class="btn" @click=${() => go(`#/quiz/mixed?cats=${l.category}`)}>Practice this category</button>
+            ${l.opening
+              ? html`<button class="btn" @click=${() => go('#/quiz/openings')}>Name That Opening</button>`
+              : html`<button class="btn" @click=${() => go(`#/quiz/mixed?cats=${l.category}`)}>Practice this category</button>`}
             <button class="btn ghost" @click=${() => this.setPhase('intro')}>Review this lesson</button>
           </div>
         </section>`;
@@ -327,8 +380,8 @@ export class LessonView extends LitElement {
     }
   }
 
-  private renderExample(l: Lesson) {
-    const steps = l.walkthrough.steps;
+  private renderExample() {
+    const steps = this.walk.steps;
     const step = steps[this._step];
     const frame = this.frames[this._step];
     const predicting = this._predictOpen;

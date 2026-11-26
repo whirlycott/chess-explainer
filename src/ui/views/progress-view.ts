@@ -1,8 +1,9 @@
 import { LitElement, css, html } from 'lit';
-import { CATEGORIES, lessonsIn } from '../../data';
-import { emptyState, getLesson, INTERVAL_DAYS, status, weeklyCount, WEEKLY_GOAL } from '../../logic/progress';
+import { CATEGORIES, OPENINGS_CATEGORY, OPENING_LESSONS, lessonsIn } from '../../data';
+import type { Lesson } from '../../data/types';
+import { emptyState, getLesson, INTERVAL_DAYS, weeklyCount, WEEKLY_GOAL } from '../../logic/progress';
 import { shared } from '../shared';
-import { StoreController, store } from '../store';
+import { StoreController, statusOf, store } from '../store';
 
 export class ProgressView extends LitElement {
   protected readonly _store = new StoreController(this);
@@ -22,8 +23,8 @@ export class ProgressView extends LitElement {
 
   render() {
     const all = CATEGORIES.flatMap((c) => lessonsIn(c.id));
-    const mastered = all.filter((l) => status(getLesson(store.state, l.id)) === 'mastered').length;
-    const learning = all.filter((l) => status(getLesson(store.state, l.id)) === 'learning').length;
+    const mastered = all.filter((l) => statusOf(l.id) === 'mastered').length;
+    const learning = all.filter((l) => statusOf(l.id) === 'learning').length;
     const week = weeklyCount(store.state, store.today);
     return html`
       <h1>My progress</h1>
@@ -36,32 +37,15 @@ export class ProgressView extends LitElement {
       <p class="muted">
         A strategy is <strong>mastered</strong> when you have answered it correctly on several different days (it climbs
         the review ladder to level 5), on at least two different positions, including at least one "find the move".
-        Review gaps grow: ${INTERVAL_DAYS.slice(1).join(', ')} days.
+        Review gaps grow: ${INTERVAL_DAYS.slice(1).join(', ')} days. These numbers count the Core Path only.
       </p>
-      ${CATEGORIES.map(
-        (c) => html`<section class="card cat" style="--hue:${c.hue}">
-          <h2>${c.title}</h2>
-          <table>
-            <thead>
-              <tr><th scope="col">Strategy</th><th scope="col">Level</th><th scope="col">Next review</th><th scope="col">Status</th></tr>
-            </thead>
-            <tbody>
-              ${lessonsIn(c.id).map((l) => {
-                const lp = getLesson(store.state, l.id);
-                const st = status(lp);
-                return html`<tr>
-                  <td><a href="#/lesson/${l.id}">${l.title}</a></td>
-                  <td>
-                    <span class="boxes" aria-label="Level ${lp.box} of 6">${[1, 2, 3, 4, 5, 6].map((b) => html`<i class=${lp.box >= b ? 'on' : ''}></i>`)}</span>
-                  </td>
-                  <td class="muted">${this.dueText(lp.due, lp.box)}</td>
-                  <td class=${st}>${st === 'mastered' ? '★ Mastered' : st === 'learning' ? 'Learning' : 'New'}</td>
-                </tr>`;
-              })}
-            </tbody>
-          </table>
-        </section>`,
-      )}
+      ${CATEGORIES.map((c) => this.renderTable(c.title, c.hue, lessonsIn(c.id)))}
+      ${this.renderTable(`${OPENINGS_CATEGORY.title} (side quest)`, OPENINGS_CATEGORY.hue, OPENING_LESSONS)}
+      <p class="muted">
+        An opening is <strong>mastered</strong> when it reaches level 5, you have solved it from both sides of the board,
+        and you have answered its plan question. Only openings in <a href="#/openings">your repertoire</a> come back in
+        Daily Review.
+      </p>
       <div class="row">
         <button class="btn ghost" @click=${this.reset}>Reset all progress…</button>
       </div>
@@ -82,6 +66,31 @@ export class ProgressView extends LitElement {
         </div>
       </dialog>
     `;
+  }
+
+  private renderTable(title: string, hue: number, lessons: Lesson[]) {
+    return html`<section class="card cat" style="--hue:${hue}">
+      <h2>${title}</h2>
+      <table>
+        <thead>
+          <tr><th scope="col">Strategy</th><th scope="col">Level</th><th scope="col">Next review</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody>
+          ${lessons.map((l) => {
+            const lp = getLesson(store.state, l.id);
+            const st = statusOf(l.id);
+            return html`<tr>
+              <td><a href="#/lesson/${l.id}">${l.title}</a></td>
+              <td>
+                <span class="boxes" aria-label="Level ${lp.box} of 6">${[1, 2, 3, 4, 5, 6].map((b) => html`<i class=${lp.box >= b ? 'on' : ''}></i>`)}</span>
+              </td>
+              <td class="muted">${this.dueText(lp.due, lp.box)}</td>
+              <td class=${st}>${st === 'mastered' ? '★ Mastered' : st === 'learning' ? 'Learning' : 'New'}</td>
+            </tr>`;
+          })}
+        </tbody>
+      </table>
+    </section>`;
   }
 
   static styles = [

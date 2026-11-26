@@ -1,5 +1,6 @@
 import type { ReactiveController, ReactiveControllerHost } from 'lit';
-import { dayNumber, load, save, type ProgressState } from '../logic/progress';
+import { OPENING_IDS } from '../data';
+import { dayNumber, dueLessons, getLesson, load, save, status, type ProgressState, type Status } from '../logic/progress';
 import { speak, stopSpeaking } from '../logic/speech';
 import { sfx } from '../logic/sfx';
 
@@ -31,6 +32,16 @@ export class StoreController implements ReactiveController {
   hostDisconnected(): void {
     store.removeEventListener('change', this.onChange);
   }
+}
+
+/** Lessons due in today's Daily Review (core lessons plus repertoire openings). */
+export function dueToday(): string[] {
+  return dueLessons(store.state, store.today, { openingIds: OPENING_IDS });
+}
+
+/** A lesson's status, using the opening mastery rule for named openings. */
+export function statusOf(id: string): Status {
+  return status(getLesson(store.state, id), OPENING_IDS.has(id) ? 'opening' : 'core');
 }
 
 /** Speak text if narration is switched on. */

@@ -62,6 +62,18 @@ const PRINCIPLES: { title: string; kid: string; how: string; refs: string }[] = 
     how: 'After a mistake in a quiz you get a link straight back to that lesson.',
     refs: 'Kulik, Kulik & Bangert-Drowns 1990',
   },
+  {
+    title: 'Openings as ideas, not lists',
+    kid: 'Learn a few moves and a plan, not a long list to memorise.',
+    how: 'Each named opening is its defining moves, one plan and one trap, linked back to the opening principles. Knowing many opening lines is something strong players end up with, not what makes them strong. So openings are an optional side quest, and only your three chosen openings come back in review.',
+    refs: 'Mayer 2002 (meaningful vs rote learning); Gobet & Simon 1996 (templates); Chassy & Gobet 2011',
+  },
+  {
+    title: 'See both sides',
+    kid: 'You learn each opening and how to meet it from the other side.',
+    how: 'Every opening has a "Meeting it" section played from the other side of the board. Comparing two cases side by side helps you spot the idea that matters.',
+    refs: 'Alfieri, Nokes-Malach & Schunn 2013',
+  },
 ];
 
 export class AboutView extends LitElement {
@@ -91,6 +103,16 @@ export class AboutView extends LitElement {
           <li>
             <strong>Chess makes you better at math:</strong> studies find little transfer from chess to math or IQ (Sala
             & Gobet 2016). Learn chess because it is fun and challenging!
+          </li>
+          <li>
+            <strong>The best way to learn openings:</strong> no study has tested how children should learn named
+            openings. Our approach (ideas before move lists, openings after the first tactics, a small repertoire) follows
+            what chess coaches agree on, plus general learning research.
+          </li>
+          <li>
+            <strong>Defence lessons:</strong> coaches say defence is under-taught, and beginners make many more mistakes
+            than strong players. But no study has shown that missing the opponent's threat is the main reason children
+            lose. We teach it because coaches widely recommend it.
           </li>
           <li>
             <strong>Exact numbers:</strong> review gaps and the mastery rule are sensible rules of thumb, not exact

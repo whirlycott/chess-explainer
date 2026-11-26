@@ -11,9 +11,10 @@ import './views/lesson-view';
 import './views/quiz-view';
 import './views/progress-view';
 import './views/about-view';
+import './views/openings-view';
 
 interface Route {
-  name: 'home' | 'category' | 'lesson' | 'quiz' | 'progress' | 'about';
+  name: 'home' | 'category' | 'lesson' | 'quiz' | 'progress' | 'about' | 'openings';
   param?: string;
   query: URLSearchParams;
 }
@@ -29,6 +30,7 @@ function parse(hash: string): Route {
       return { name, param, query };
     case 'progress':
     case 'about':
+    case 'openings':
       return { name, query };
     default:
       return { name: 'home', query };
@@ -95,6 +97,8 @@ export class AppShell extends LitElement {
         return html`<progress-view></progress-view>`;
       case 'about':
         return html`<about-view></about-view>`;
+      case 'openings':
+        return html`<openings-view></openings-view>`;
       default:
         return html`<home-view></home-view>`;
     }
@@ -105,6 +109,7 @@ export class AppShell extends LitElement {
     const nav = [
       ['home', '#/', 'Home'],
       ['quiz', '#/quiz', 'Practice'],
+      ['openings', '#/openings', 'Openings'],
       ['progress', '#/progress', 'Progress'],
       ['about', '#/about', 'How it works'],
     ] as const;

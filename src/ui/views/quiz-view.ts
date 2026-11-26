@@ -1,14 +1,14 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { keyed } from 'lit/directives/keyed.js';
-import { CATEGORIES, LESSONS, lessonById } from '../../data';
+import { CATEGORIES, CORE_LESSONS, OPENING_LESSONS, lessonById } from '../../data';
 import type { CategoryId } from '../../data/types';
 import { startFen } from '../../logic/position';
-import { dueLessons, getLesson, recordAnswer, type ItemType } from '../../logic/progress';
+import { getLesson, recordAnswer, type ItemType } from '../../logic/progress';
 import { buildQuiz, lessonsInCategories, type QuizItem, type QuizMode } from '../../logic/quiz';
 import type { AnsweredDetail } from '../multi-choice';
 import type { PuzzleDoneDetail } from '../puzzle-runner';
 import { shared } from '../shared';
-import { StoreController, go, quiet, store } from '../store';
+import { StoreController, dueToday, go, quiet, store } from '../store';
 import '../board-view';
 import '../multi-choice';
 import '../puzzle-runner';
@@ -18,6 +18,7 @@ const MODES: { id: QuizMode; title: string; blurb: string; icon: string }[] = [
   { id: 'mixed', title: 'Mixed Practice', blurb: 'Questions from different strategies, all shuffled. Trains you to pick the right tool.', icon: '🔀' },
   { id: 'name', title: 'Name That Strategy', blurb: 'Look at a position and decide which strategy fits it.', icon: '🔎' },
   { id: 'move', title: 'Find the Move', blurb: 'Play the winning move on the board, with no clues about which strategy it is.', icon: '♞' },
+  { id: 'openings', title: 'Name That Opening', blurb: 'Openings and their plans, all mixed up. Which opening is it? Mixing look-alikes is supposed to feel hard.', icon: '📖' },
 ];
 
 interface Result {
@@ -63,7 +64,7 @@ export class QuizView extends LitElement {
       const cats = this.categories.split(',').filter(Boolean) as CategoryId[];
       this._items = null;
       this._picked = new Set(cats);
-      if (this.mode === 'review' || (this.mode && cats.length > 0)) this.begin();
+      if (this.mode === 'review' || this.mode === 'openings' || (this.mode && cats.length > 0)) this.begin();
     }
   }
 
@@ -73,9 +74,10 @@ export class QuizView extends LitElement {
   }
 
   private pool(): string[] {
-    if (this.mode === 'review') return dueLessons(store.state, store.today);
+    if (this.mode === 'review') return dueToday();
+    if (this.mode === 'openings') return OPENING_LESSONS.map((l) => l.id);
     const cats = [...this._picked];
-    return cats.length ? lessonsInCategories(cats) : LESSONS.map((l) => l.id);
+    return cats.length ? lessonsInCategories(cats) : CORE_LESSONS.map((l) => l.id);
   }
 
   private begin(): void {
@@ -118,7 +120,7 @@ export class QuizView extends LitElement {
   }
 
   private renderMenu() {
-    const due = dueLessons(store.state, store.today).length;
+    const due = dueToday().length;
     return html`<h1>Practice</h1>
       <p class="muted lead">Testing yourself is one of the best-proven ways to learn. Mixing different strategies teaches you which one to use.</p>
       <div class="modes">
@@ -193,14 +195,17 @@ export class QuizView extends LitElement {
           ${footer}`;
       case 'name': {
         const fen = startFen(item.puzzle);
-        const turn = fen.split(' ')[1] === 'w' ? 'white' : 'black';
+        // Openings are shown from the side that plays them; strategies from the side to move.
+        const turn = lesson.opening ? lesson.opening.plays : fen.split(' ')[1] === 'w' ? 'white' : 'black';
         return html`${header}
           <div class="split">
             <board-view .fen=${fen} .orientation=${turn} .label=${'Quiz position'}></board-view>
             <div class="card pad">
-              <p class="eyebrow">Name that strategy · ${turn === 'white' ? 'White' : 'Black'} to move</p>
+              <p class="eyebrow">
+                ${lesson.opening ? 'Name that opening' : `Name that strategy · ${turn === 'white' ? 'White' : 'Black'} to move`}
+              </p>
               <multi-choice
-                .question=${'Which strategy is the key to this position?'}
+                .question=${lesson.opening ? 'Which opening is this?' : 'Which strategy is the key to this position?'}
                 .choices=${item.choices.map((id) => lessonById(id)!.title)}
                 .answer=${item.answer}
                 .why=${item.puzzle.explanation}
@@ -214,10 +219,10 @@ export class QuizView extends LitElement {
       case 'idea':
         return html`${header}
           <section class="card pad">
-            <p class="eyebrow">Which strategy is this?</p>
+            <p class="eyebrow">${lesson.opening ? 'Which opening is aiming for this plan?' : 'Which strategy is this?'}</p>
             <blockquote>${item.text}</blockquote>
             <multi-choice
-              .question=${'Pick the strategy this describes.'}
+              .question=${lesson.opening ? 'Pick the opening.' : 'Pick the strategy this describes.'}
               .choices=${item.choices.map((id) => lessonById(id)!.title)}
               .answer=${item.answer}
               .why=${`${lesson.title}: ${lesson.cues[0]}`}
