@@ -5,6 +5,9 @@ import type { Arrow } from '../data/types';
 import { track, type TrackedPiece } from '../logic/diff';
 import { pieceSvg } from './pieces';
 
+/** How long a captured or removed piece stays on screen while it fades out. */
+const LEAVE_MS = 300;
+
 export interface BoardMoveDetail {
   from: string;
   to: string;
@@ -79,6 +82,7 @@ export class ChessBoard extends LitElement {
     interactive: { type: Boolean },
     label: { type: String },
     _pieces: { state: true },
+    _leaving: { state: true },
     _drag: { state: true },
     _shake: { state: true },
   };
@@ -91,6 +95,8 @@ export class ChessBoard extends LitElement {
   declare interactive: boolean;
   declare label: string;
   declare _pieces: TrackedPiece[];
+  /** Pieces that just left the board (captured or gone); kept briefly so they fade out. */
+  declare _leaving: TrackedPiece[];
   declare _drag: { id: number; from: string; x: number; y: number } | null;
   declare _shake: boolean;
 
@@ -99,6 +105,7 @@ export class ChessBoard extends LitElement {
     () => this.interactive,
   );
   private dragStart: { x: number; y: number } | null = null;
+  private leaveTimer = 0;
 
   constructor() {
     super();
@@ -110,16 +117,36 @@ export class ChessBoard extends LitElement {
     this.interactive = false;
     this.label = 'Chess board';
     this._pieces = [];
+    this._leaving = [];
     this._drag = null;
     this._shake = false;
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this.leaveTimer);
+  }
+
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('fen')) {
-      this._pieces = track(this._pieces, this.fen);
+      const before = this._pieces;
+      this._pieces = track(before, this.fen);
+      const kept = new Set(this._pieces.map((p) => p.id));
+      this._leaving = before.filter((p) => !kept.has(p.id));
+      clearTimeout(this.leaveTimer);
+      if (this._leaving.length) this.leaveTimer = window.setTimeout(() => (this._leaving = []), LEAVE_MS);
       this.input.clear();
     }
     if (changed.has('interactive') && !this.interactive) this.input.clear();
+  }
+
+  /**
+   * Pieces in a stable order (by id), so moving a piece never moves its element in
+   * the page. Browsers cancel a running transition when an element is moved, which
+   * would make the piece jump instead of glide.
+   */
+  private renderOrder(): TrackedPiece[] {
+    return [...this._leaving, ...this._pieces].sort((a, b) => a.id - b.id);
   }
 
   /** Board-relative (0..7) coordinates of a square, taking orientation into account. */
@@ -243,13 +270,16 @@ export class ChessBoard extends LitElement {
     >
       <div class="squares">${squares}</div>
       <div class="pieces">
-        ${repeat(this._pieces, (p) => p.id, (p) => {
+        ${repeat(this.renderOrder(), (p) => p.id, (p) => {
           const [x, y] = this.xy(p.square);
           const dragging = this._drag?.id === p.id;
+          const leaving = this._leaving.includes(p);
           const style = dragging
             ? `transform: translate(calc(${x * 100}% + ${this._drag!.x}px), calc(${y * 100}% + ${this._drag!.y}px)) scale(1.12)`
             : `transform: translate(${x * 100}%, ${y * 100}%)`;
-          return html`<div class="piece ${dragging ? 'dragging' : ''}" style=${style}>${pieceSvg(p.color, p.type)}</div>`;
+          return html`<div class="piece ${dragging ? 'dragging' : ''} ${leaving ? 'leaving' : ''}" style=${style}>
+            ${pieceSvg(p.color, p.type)}
+          </div>`;
         })}
       </div>
       <svg class="arrows" viewBox="0 0 800 800" aria-hidden="true">
@@ -380,9 +410,25 @@ export class ChessBoard extends LitElement {
       position: absolute;
       width: 12.5%;
       height: 12.5%;
-      transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition:
+        transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 0.26s ease,
+        scale 0.26s ease;
       filter: drop-shadow(0 4px 3px oklch(0 0 0 / 0.35));
       will-change: transform;
+    }
+    /* New pieces fade in instead of popping into place. */
+    @starting-style {
+      .piece {
+        opacity: 0;
+        scale: 0.7;
+      }
+    }
+    /* Pieces that leave fade out under the piece that captures them. */
+    .piece.leaving {
+      opacity: 0;
+      scale: 0.7;
+      pointer-events: none;
     }
     .piece.dragging {
       transition: none;
@@ -403,6 +449,7 @@ export class ChessBoard extends LitElement {
     }
     @media (prefers-reduced-motion: reduce) {
       .piece { transition: none; }
+      .piece.leaving { display: none; }
       .hl::after { animation: none; }
       .board.shake { animation: none; }
     }

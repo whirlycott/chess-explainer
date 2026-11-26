@@ -44,9 +44,8 @@ let nextId = 1;
  * 2. otherwise the nearest unmatched old piece of the same colour and type;
  * 3. a pawn that promoted keeps its id (matched by colour, as a pawn);
  * 4. anything else gets a new id.
- * One move slides at most two pieces (castling). If more would slide, the new
- * position is not one move away, so the moved pieces get new ids and appear in
- * place instead of sliding across the board.
+ * Every matched piece keeps its id, so a renderer can glide it to its new
+ * square even when the new position is several moves away.
  */
 export function track(prev: TrackedPiece[], fen: string): TrackedPiece[] {
   const next = placement(fen);
@@ -74,10 +73,5 @@ export function track(prev: TrackedPiece[], fen: string): TrackedPiece[] {
   matchBy((o, p) => o.type === p.type && o.color === p.color);
   matchBy((o, p) => o.type === 'p' && o.color === p.color && (p.square[1] === '8' || p.square[1] === '1'));
 
-  const slid = result.filter((r, i) => r && prev.find((o) => o.id === r.id)!.square !== next[i].square).length;
-  return next.map((p, i) => {
-    const r = result[i];
-    if (!r || (slid > 2 && r.square !== prev.find((o) => o.id === r.id)!.square)) return { id: nextId++, ...p };
-    return r;
-  });
+  return next.map((p, i) => result[i] ?? { id: nextId++, ...p });
 }

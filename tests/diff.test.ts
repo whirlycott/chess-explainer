@@ -39,26 +39,24 @@ describe('piece tracking', () => {
     const b = track(a, 'Q7/8/8/8/8/8/8/k6K b - - 0 1');
     expect(b.find((p) => p.square === 'a8')).toMatchObject({ id: pawn, type: 'q' });
   });
-  it('does not slide pieces when jumping to a position more than one move away', () => {
+  it('keeps identities across a jump of several moves, so every moved piece glides', () => {
     const a = track([], new Chess().fen());
     const g = new Chess();
     for (const m of ['e4', 'e5', 'Nf3', 'Nc6']) g.move(m);
     const b = track(a, g.fen());
-    const moved = b.filter((p) => {
-      const old = a.find((o) => o.id === p.id);
-      return old && old.square !== p.square;
-    });
-    expect(moved).toHaveLength(0);
-    // Pieces that stayed put keep their ids.
-    expect(b.find((p) => p.square === 'a1')!.id).toBe(a.find((p) => p.square === 'a1')!.id);
+    const id = (t: typeof a, sq: string) => t.find((p) => p.square === sq)!.id;
+    expect(id(b, 'e4')).toBe(id(a, 'e2'));
+    expect(id(b, 'e5')).toBe(id(a, 'e7'));
+    expect(id(b, 'f3')).toBe(id(a, 'g1'));
+    expect(id(b, 'c6')).toBe(id(a, 'b8'));
     expect(b).toHaveLength(32);
   });
 
-  it('does not slide pieces into an unrelated puzzle position', () => {
+  it('glides pieces into an unrelated position instead of making them appear', () => {
     const a = track([], 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4');
     const b = track(a, '6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1');
-    const slid = b.filter((p) => a.some((o) => o.id === p.id && o.square !== p.square));
-    expect(slid).toHaveLength(0);
+    // Every piece in the new position has a same-type piece in the old one, so none is new.
+    for (const p of b) expect(a.some((o) => o.id === p.id), `${p.color}${p.type} on ${p.square}`).toBe(true);
   });
 });
 
