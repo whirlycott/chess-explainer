@@ -53,7 +53,7 @@ export const middlegame: Lesson[] = [
       {
         fen: '3r2k1/pp3ppp/4n3/4p3/4P3/1P1P4/P3BPPP/2R3K1 b - - 0 1',
         prompt: 'White has no c-pawn. Find a strong outpost for your knight.',
-        lines: [['Nd4'], ['Nf4']],
+        lines: [['Nd4']],
         hints: ['Which squares can no White pawn attack?', 'Your e-pawn protects d4.'],
         explanation: 'The knight sits on a square that White\'s pawns can never attack.',
         orientation: 'black',

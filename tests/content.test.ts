@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Chess } from 'chess.js';
+import { Chess, type Square } from 'chess.js';
 import {
   CATEGORIES,
   CONFUSABLE,
@@ -46,6 +46,38 @@ describe('curriculum', () => {
   it('only references real lessons in confusable groups', () => {
     const ids = new Set(LESSONS.map((l) => l.id));
     for (const group of CONFUSABLE) for (const id of group) expect(ids.has(id), id).toBe(true);
+  });
+});
+
+describe('knight outpost', () => {
+  // An outpost is a square that no enemy pawn can ever attack.
+  function enemyPawnCanAttack(fen: string, square: string, mover: 'w' | 'b'): boolean {
+    const game = new Chess(fen);
+    const file = square.charCodeAt(0) - 97;
+    const rank = Number(square[1]);
+    for (const df of [-1, 1]) {
+      const f = file + df;
+      if (f < 0 || f > 7) continue;
+      for (let r = 1; r <= 8; r++) {
+        const piece = game.get(`${String.fromCharCode(97 + f)}${r}` as Square);
+        if (!piece || piece.type !== 'p' || piece.color === mover) continue;
+        // A White pawn attacks upward, so it must still be below the square; a Black pawn the reverse.
+        if (piece.color === 'w' && r < rank) return true;
+        if (piece.color === 'b' && r > rank) return true;
+      }
+    }
+    return false;
+  }
+
+  it('only accepts answers on squares no enemy pawn can ever attack', () => {
+    const lesson = LESSONS.find((l) => l.id === 'outpost')!;
+    for (const p of lesson.puzzles) {
+      const start = resolveStart(p);
+      for (const line of p.lines) {
+        const move = new Chess(start.fen()).move(line[0]);
+        expect(enemyPawnCanAttack(start.fen(), move.to, move.color), `${line[0]} lands on ${move.to}`).toBe(false);
+      }
+    }
   });
 });
 
