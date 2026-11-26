@@ -609,6 +609,82 @@ export const middlegame: Lesson[] = [
     },
   },
   {
+    id: 'blockade',
+    title: 'Blockade',
+    aka: 'First stop the pawn, then attack it',
+    category: 'middlegame',
+    level: 2,
+    bigIdea:
+      'Stop a passed pawn by parking a piece right in front of it. A knight is the best blocker, because it still attacks squares while it blocks.',
+    cues: [
+      'Your opponent has a passed pawn with no pawns in its way.',
+      'The square right in front of that pawn is free.',
+      'You have a knight, or a king in the endgame, that can reach that square.',
+    ],
+    walkthrough: {
+      fen: '3rn1k1/pp3ppp/8/3P4/8/5B2/PP3PPP/3R2K1 b - - 0 1',
+      orientation: 'black',
+      steps: [
+        {
+          say: "White's pawn on d5 is passed. No black pawn can stop it, and it wants to march to the last row.",
+          arrows: [['d5', 'd8', 'red']],
+          highlights: ['d5'],
+        },
+        {
+          say: 'A famous teacher, Aron Nimzowitsch, said: first stop the pawn, then attack it. Stopping it is called a blockade.',
+        },
+        {
+          san: 'Nd6',
+          predict: 'Park your knight right in front of the pawn.',
+          say: 'The knight blocks the pawn. The pawn cannot move, and no White pawn can chase the knight away.',
+          highlights: ['d6'],
+        },
+        { san: 'Kf1', say: 'White brings the king toward the center.' },
+        {
+          san: 'Kf8',
+          say: "Black's king comes too. The knight holds the pawn, and later Black's king and rook can attack it.",
+        },
+      ],
+    },
+    explain: {
+      q: 'Why is a knight a good blocker?',
+      choices: [
+        'It still attacks squares around it while it blocks the pawn.',
+        'Knights cannot be captured.',
+        'Pawns cannot move next to knights.',
+      ],
+      answer: 0,
+      why: 'A blockading knight is safe from the pawn and still does useful work.',
+    },
+    mistake:
+      'Blocking with a rook or the queen. Big pieces get tied down as blockers. Use a knight, a bishop or, in the endgame, the king.',
+    puzzles: [
+      {
+        fen: '3r2k1/pp3ppp/8/3P1n2/8/2N5/PP3PPP/3R2K1 b - - 0 1',
+        prompt: "White's d-pawn is passed. Blockade it!",
+        lines: [['Nd6']],
+        hints: ['Which square is right in front of the pawn?', 'Your knight can reach d6.'],
+        explanation: 'The knight sits on d6, in front of the pawn. The pawn is stuck, and your rook stays free.',
+        orientation: 'black',
+        kind: 'plan',
+      },
+      {
+        fen: '6k1/5ppp/8/1b6/8/1N1p4/P4PPP/5K2 w - - 0 1',
+        prompt: "Black's pawn on d3 is passed. Stop it! In an endgame, the king is a great blocker.",
+        lines: [['Ke1']],
+        hints: ['Bring the king toward the square in front of the pawn.', 'The king goes to e1, and next to d2.'],
+        explanation: 'The king heads for d2, right in front of the pawn. A king blockade is very strong in endgames.',
+        kind: 'plan',
+      },
+    ],
+    check: {
+      q: 'Where do you put a blockader?',
+      choices: ['On the square right in front of the passed pawn', 'Behind the passed pawn', 'In a corner'],
+      answer: 0,
+      why: 'Directly in front of the pawn, it cannot move forward at all.',
+    },
+  },
+  {
     id: 'pawn-storm',
     title: 'Pawn Storm',
     category: 'middlegame',
@@ -674,6 +750,88 @@ export const middlegame: Lesson[] = [
       choices: ['The kings castled on opposite sides', 'Both kings are in the center', 'You have no pawns left', 'The queens are traded'],
       answer: 0,
       why: 'Then your attacking pawns are not needed to protect your own king.',
+    },
+  },
+  {
+    id: 'trade-attackers',
+    title: 'Trade Off the Attackers',
+    aka: 'When behind, trade pawns, not pieces',
+    category: 'middlegame',
+    level: 2,
+    bigIdea:
+      "When your king is under pressure, swap off your opponent's best attacking pieces. Fewer attackers means a safer king.",
+    cues: [
+      'Enemy pieces are aimed at your king.',
+      "One enemy piece does most of the work, like a bishop on your king's diagonal.",
+      'You can offer a trade on a square your opponent cannot easily avoid.',
+    ],
+    walkthrough: {
+      setup: '1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 Nf6 5.d3 d6 6.O-O O-O 7.Bb3 a6 8.Nbd2 Ba7 9.h3',
+      orientation: 'black',
+      steps: [
+        {
+          say: "White's bishop on b3 aims at f7 and your king behind it. It is White's best attacking piece.",
+          arrows: [['b3', 'g8', 'red']],
+        },
+        {
+          san: 'Be6',
+          predict: 'Offer to trade that bishop with one of yours.',
+          say: 'The bishop steps into the diagonal and offers a trade.',
+          arrows: [['e6', 'b3', 'green']],
+        },
+        { san: 'Bxe6', say: 'White takes.' },
+        {
+          san: 'fxe6',
+          say: 'Black takes back. The dangerous bishop is gone, the f-file opens for your rook, and the new pawn guards the center.',
+          arrows: [['f8', 'f3', 'blue']],
+        },
+        {
+          say: 'A good rule: when attacked, trade the attackers. When ahead, trade pieces. When behind, trade pawns, not pieces.',
+        },
+      ],
+    },
+    explain: {
+      q: "Why did Black want to trade off White's bishop?",
+      choices: [
+        "It was White's best piece aimed at Black's king.",
+        'Bishops are always worth more than knights.',
+        'Trading pieces is always good.',
+      ],
+      answer: 0,
+      why: 'Trading your opponent\'s most dangerous attacker makes your king safer.',
+    },
+    mistake:
+      "Trading off your own defenders instead of your opponent's attackers. Swap the piece that hurts you, not the piece that guards you.",
+    puzzles: [
+      {
+        setup: '1.d4 d5 2.Bf4 Nf6 3.e3 e6 4.Nf3',
+        prompt: "White's bishop on f4 is its best piece. Offer to trade it off.",
+        lines: [['Bd6']],
+        hints: ['Put a bishop on the same diagonal, facing the bishop on f4.', 'Your dark-squared bishop can go to d6.'],
+        explanation:
+          "Now White must trade its best bishop or step back. Either way, it no longer rules the important dark squares.",
+        orientation: 'black',
+        kind: 'plan',
+      },
+      {
+        setup: '1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Bf5 5.Ng3 Bg6 6.h4 h6 7.Nf3 Nd7 8.h5 Bh7 9.Bd3',
+        prompt: "White's bishop wants to aim at your kingside. Swap it off!",
+        lines: [['Bxd3']],
+        hints: ['Your bishop on h7 faces the bishop on d3.', 'Take it.'],
+        explanation: 'Black trades off the bishop that would aim at the kingside. White has fewer attackers.',
+        orientation: 'black',
+        kind: 'plan',
+      },
+    ],
+    check: {
+      q: 'Your king is attacked by a queen and a bishop. Which trade helps you most?',
+      choices: [
+        'Your defending knight for one of their pawns',
+        'One of your bishops for their attacking bishop',
+        'Your rook for their rook on the other side of the board',
+      ],
+      answer: 1,
+      why: 'Swapping off an attacker takes power away from the attack.',
     },
   },
 ];

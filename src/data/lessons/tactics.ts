@@ -140,6 +140,93 @@ export const tactics: Lesson[] = [
     },
   },
   {
+    id: 'break-pin',
+    title: 'Breaking a Pin',
+    aka: 'Unpinning',
+    category: 'tactics',
+    level: 2,
+    bigIdea:
+      'When your piece is pinned, break the pin: attack the pinning piece, move the piece behind out of the line, or put something in between.',
+    cues: [
+      'An enemy bishop, rook or queen lines up through your piece to a bigger piece behind it.',
+      'Your pinned piece is attacked, or soon will be.',
+      'You have a pawn that can attack the pinner, or a piece that can step in between.',
+    ],
+    walkthrough: {
+      setup: '1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.d3 Nf6 5.Nc3 d6 6.Bg5',
+      orientation: 'black',
+      steps: [
+        {
+          say: 'The bishop pins your knight to your queen. If the knight moves, the queen is lost. White may also take the knight and damage your pawns.',
+          arrows: [['g5', 'd8', 'red']],
+          highlights: ['f6', 'd8'],
+        },
+        {
+          say: 'Three ways to break a pin: attack the pinning piece, move the piece behind out of the line, or put something in between.',
+        },
+        {
+          san: 'h6',
+          predict: 'Ask the bishop a question: attack it with a pawn.',
+          say: 'The pawn attacks the bishop. White must decide: take the knight, or step back and keep the pin.',
+          arrows: [['h6', 'g5', 'red']],
+        },
+        { san: 'Bxf6', say: 'White gives up the bishop for the knight.' },
+        {
+          san: 'Qxf6',
+          say: 'The queen takes back. The pin is gone, your pawns are healthy, and you now have two bishops against a bishop and knight.',
+        },
+        {
+          san: 'Nd5',
+          say: 'White attacks the queen with the knight.',
+          arrows: [['d5', 'f6', 'red']],
+        },
+        {
+          san: 'Qd8',
+          say: 'The queen steps back to safety. The pin is broken, and the game goes on with equal chances.',
+        },
+      ],
+    },
+    explain: {
+      q: 'Why is a pin on the knight dangerous for Black?',
+      choices: [
+        'The knight cannot move without losing the queen, and White can take it and damage the pawns.',
+        'A pinned piece is removed from the board.',
+        'A pinned knight can never move again for the rest of the game.',
+      ],
+      answer: 0,
+      why: 'A pinned piece is stuck in place, so it is an easy target until you break the pin.',
+    },
+    mistake:
+      'Moving the pinned piece anyway and losing what is behind it. Also, careless pawn pushes in front of your castled king can weaken it.',
+    puzzles: [
+      {
+        setup: '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bb5 Bb4 5.O-O O-O 6.d3 d6 7.Bg5 Bxc3 8.bxc3',
+        prompt: 'Your knight on f6 is pinned to your queen. Break the pin!',
+        lines: [['Qe7'], ['h6'], ['Ne7']],
+        hints: ['You could step the queen out of the line.', 'Or attack the bishop with a pawn, or put a piece in between.'],
+        explanation:
+          'Moving the queen off the line, attacking the bishop with a pawn, or bringing the other knight to e7 all break the pin.',
+        orientation: 'black',
+        kind: 'plan',
+      },
+      {
+        setup: '1.d4 Nf6 2.c4 e6 3.Nc3 Bb4',
+        prompt: 'Your knight on c3 is pinned to your king. Break the pin, or get ready to.',
+        lines: [['a3'], ['Bd2'], ['Qc2']],
+        hints: ['Can a pawn attack the pinning bishop?', 'You could also put a piece in between.'],
+        explanation:
+          'The a-pawn asks the bishop to decide, the bishop on d2 steps in between, and the queen on c2 gets ready to take back on c3 so your pawns stay healthy.',
+        kind: 'plan',
+      },
+    ],
+    check: {
+      q: 'Which move breaks a pin by attacking the pinning piece?',
+      choices: ['A pawn move that attacks the pinning bishop', 'Moving the pinned knight', 'Moving a rook to the corner'],
+      answer: 0,
+      why: 'A pawn attack makes the pinner decide right away: trade itself off or step back.',
+    },
+  },
+  {
     id: 'skewer',
     title: 'The Skewer',
     category: 'tactics',

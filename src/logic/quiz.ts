@@ -48,6 +48,11 @@ const OVERLAPS: [string, string][] = [
   ['legal', 'early-mates'],
   ['trade-ahead', 'values'],
   ['in-between', 'values'],
+  ['meet-threat', 'cct'],
+  ['meet-threat', 'escape-check'],
+  ['escape-check', 'cct'],
+  ['stalemate-trick', 'stalemate'],
+  ['break-pin', 'pin'],
 ];
 
 function overlaps(a: string, b: string): boolean {

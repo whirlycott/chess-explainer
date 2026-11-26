@@ -6,9 +6,9 @@ import { resolveStart } from '../src/logic/position';
 const SQUARE = /^[a-h][1-8]$/;
 
 describe('curriculum', () => {
-  it('has exactly 50 strategies with unique ids', () => {
-    expect(LESSONS).toHaveLength(50);
-    expect(new Set(LESSONS.map((l) => l.id)).size).toBe(50);
+  it('has exactly 56 Core Path strategies with unique ids', () => {
+    expect(LESSONS).toHaveLength(56);
+    expect(new Set(LESSONS.map((l) => l.id)).size).toBe(56);
   });
 
   it('puts every lesson in a known category, and every category has lessons', () => {
@@ -19,7 +19,7 @@ describe('curriculum', () => {
 
   it('has a learning path that covers every lesson exactly once', () => {
     const ids = PATH.flatMap((s) => s.ids);
-    expect(ids).toHaveLength(50);
+    expect(ids).toHaveLength(56);
     expect(new Set(ids)).toEqual(new Set(LESSONS.map((l) => l.id)));
   });
 

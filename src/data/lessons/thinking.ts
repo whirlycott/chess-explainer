@@ -165,6 +165,213 @@ export const thinking: Lesson[] = [
     },
   },
   {
+    id: 'meet-threat',
+    title: 'Meet the Threat',
+    aka: 'Five answers to any attack',
+    category: 'thinking',
+    level: 1,
+    bigIdea:
+      'When your opponent attacks, you have five answers: move it, guard it, block the attack, take the attacker, or make a bigger threat.',
+    cues: [
+      'Your opponent just moved a piece that now attacks one of yours.',
+      'One of your pieces is attacked more times than it is guarded.',
+      'Two enemy pieces line up on the same target.',
+    ],
+    walkthrough: {
+      setup: '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4',
+      orientation: 'white',
+      steps: [
+        {
+          say: 'Every time your opponent moves, ask one question: what does that move threaten? Then pick the best answer.',
+        },
+        {
+          san: 'Nf6',
+          say: "Black's knight attacks your pawn on e4. That is a threat.",
+          arrows: [['f6', 'e4', 'red']],
+        },
+        {
+          say: 'Your five answers: move it away, guard it, block the attack, take the attacker, or make a bigger threat of your own.',
+          highlights: ['e4'],
+        },
+        {
+          san: 'Nc3',
+          predict: 'Guard the pawn on e4 with a piece that also develops.',
+          alsoGood: ['Nxc6'],
+          say: 'The knight guards the pawn and comes into the game. Guarding and developing at the same time!',
+          arrows: [['c3', 'e4', 'green']],
+        },
+        {
+          san: 'Bb4',
+          say: 'A new threat. The bishop pins the knight that guards e4. If it takes the knight, the pawn on e4 has no guard left.',
+          arrows: [['b4', 'c3', 'red']],
+          highlights: ['e4'],
+        },
+        {
+          san: 'Nxc6',
+          say: 'White trades knights first. A bishop on d3 would block the queen from guarding the knight on d4, so the knight leaves.',
+        },
+        { san: 'bxc6', say: 'Black takes back.' },
+        {
+          san: 'Bd3',
+          predict: 'Guard the pawn on e4 a second time.',
+          say: 'Now the bishop guards the pawn safely. Two guards for one pawn.',
+          arrows: [['d3', 'e4', 'green']],
+        },
+        {
+          san: 'd5',
+          say: 'Black attacks the pawn again, this time with a pawn.',
+          arrows: [['d5', 'e4', 'red']],
+        },
+        {
+          san: 'exd5',
+          predict: 'This time, take the attacker!',
+          alsoGood: ['e5'],
+          say: 'White takes the attacking pawn. Removing the attacker solves the problem for good.',
+        },
+        {
+          san: 'cxd5',
+          say: 'Black takes back. Every threat was met with a different answer, and the game is balanced.',
+        },
+      ],
+    },
+    explain: {
+      q: 'At the end, why did White take the pawn instead of guarding e4 a third time?',
+      choices: [
+        'Taking the attacker removes the threat for good.',
+        'Pawns must always be captured.',
+        'Guarding a pawn three times is against the rules.',
+      ],
+      answer: 0,
+      why: 'Guarding only holds while the guards stay put. Taking the attacker ends the threat completely.',
+    },
+    mistake:
+      'Picking the first answer you see. Check all five, and make sure that moving a piece away does not leave another piece unguarded.',
+    puzzles: [
+      {
+        setup: '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nxe4 4.Qe2',
+        prompt: "Your knight on e4 is attacked by White's queen. Meet the threat without losing your queen!",
+        lines: [['Qe7']],
+        hints: [
+          'If your knight simply moves away, the White knight can jump with a discovered check.',
+          'Guard the knight and block the line with your queen.',
+        ],
+        explanation:
+          'The queen guards the knight and blocks the e-file. Moving the knight away would allow a discovered check that wins your queen.',
+        orientation: 'black',
+        kind: 'tactic',
+      },
+      {
+        setup: '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d4 exd4 5.e5',
+        prompt: 'A pawn attacks your knight. Moving it is fine, but can you hit back at the same time?',
+        lines: [['d5'], ['Ne4'], ['Ng4']],
+        hints: ["Which White piece could you attack?", 'A pawn on d5 attacks the bishop on c4.'],
+        explanation:
+          "The pawn move to d5 makes a bigger threat: it attacks White's bishop, so White has no time to take your knight for free.",
+        orientation: 'black',
+        kind: 'plan',
+      },
+    ],
+    check: {
+      q: 'Your bishop is attacked by a pawn. Which of these is NOT a real answer?',
+      choices: [
+        'Move the bishop away',
+        'Make a bigger threat somewhere else',
+        'Ignore it and hope your opponent misses it',
+        'Guard the bishop',
+      ],
+      answer: 2,
+      why: 'Hoping is not a plan. Coaches call this "hope chess". Always answer the threat.',
+    },
+  },
+  {
+    id: 'escape-check',
+    title: 'Escape from Check',
+    aka: 'Capture, Block, Run',
+    category: 'thinking',
+    level: 1,
+    bigIdea:
+      'In check, there are only three ways out: capture the checking piece, block the line, or run with the king. Look at all three, then pick the best.',
+    cues: [
+      'Your king is in check.',
+      'The checking piece might be loose, so first see if you can capture it.',
+      'You can block only a queen, rook or bishop checking from a distance.',
+    ],
+    walkthrough: {
+      setup: '1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 Nf6 5.d4 exd4 6.cxd4',
+      orientation: 'white',
+      steps: [
+        {
+          san: 'Bb4+',
+          say: 'Check! The bishop attacks your king. You must deal with it right now.',
+          arrows: [['b4', 'e1', 'red']],
+        },
+        {
+          say: 'Three ways out: capture the checking piece, block the line, or run. Here nothing can capture the bishop.',
+        },
+        {
+          say: 'Running to f1 is legal, but a king that moves can never castle. Blocking looks better.',
+          highlights: ['f1'],
+        },
+        {
+          san: 'Bd2',
+          predict: 'Block the check with a piece that has not moved yet.',
+          alsoGood: ['Nc3', 'Nbd2'],
+          say: 'The bishop blocks the check. It is guarded, so a trade is fine.',
+        },
+        { san: 'Bxd2+', say: 'Black trades bishops, with check again.' },
+        {
+          san: 'Nbxd2',
+          predict: 'Capture the checking bishop with a piece that also develops.',
+          alsoGood: ['Qxd2'],
+          say: 'The knight captures and develops at the same time. Capturing the checker is often the best escape.',
+        },
+        {
+          san: 'd5',
+          say: 'Black strikes at the center. White escaped both checks and can still castle.',
+        },
+      ],
+    },
+    explain: {
+      q: 'Why did White block the first check instead of moving the king to f1?',
+      choices: [
+        'A king that moves loses the right to castle.',
+        'Kings are not allowed to move when in check.',
+        'Blocking always wins material.',
+      ],
+      answer: 0,
+      why: 'Once the king moves, castling is gone for the whole game, so the king may get stuck in the middle.',
+    },
+    mistake:
+      'Grabbing the first legal escape. Running is legal but often costs castling, and a careless block can lose the blocking piece.',
+    puzzles: [
+      {
+        setup: '1.e4 e5 2.Bc4 Bc5 3.Bxf7+',
+        prompt: 'Check! Find the best of the three escapes.',
+        lines: [['Kxf7']],
+        hints: ['Can anything capture the checking bishop?', 'Is that bishop guarded by any White piece?'],
+        explanation: 'The bishop was loose. The king captures it, and Black is a whole piece ahead.',
+        orientation: 'black',
+        kind: 'tactic',
+      },
+      {
+        setup: '1.e4 e5 2.Nf3 d6 3.Bb5+',
+        prompt: 'Check! Block it, and attack something if you can.',
+        lines: [['c6'], ['Bd7'], ['Nd7'], ['Nc6']],
+        hints: ['A pawn, a knight or a bishop can block on c6 or d7.', 'A pawn on c6 blocks the check and attacks the bishop.'],
+        explanation:
+          'Blocking with the c-pawn stops the check and attacks the bishop, so White must move it again.',
+        orientation: 'black',
+        kind: 'plan',
+      },
+    ],
+    check: {
+      q: 'A knight gives check. Which escape is impossible?',
+      choices: ['Capture the knight', 'Block the check', 'Move the king'],
+      answer: 1,
+      why: 'A knight jumps, so nothing can be put in its way. You can only capture it or run.',
+    },
+  },
+  {
     id: 'prophylaxis',
     title: 'Prophylaxis',
     aka: 'Stop their plan before it starts',

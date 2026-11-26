@@ -277,6 +277,85 @@ export const endgame: Lesson[] = [
     },
   },
   {
+    id: 'stalemate-trick',
+    title: 'Swindles: the Stalemate Trick',
+    aka: 'A losing player\'s last chance',
+    category: 'endgame',
+    level: 2,
+    bigIdea:
+      'When you are hopelessly behind and your king has no moves, give away your last pieces. If your opponent must take, it is stalemate: a draw!',
+    cues: [
+      'You are far behind in material.',
+      'Your king has no safe squares, and your pawns are stuck.',
+      'Your last piece can give check next to the enemy king, or keep checking forever.',
+    ],
+    walkthrough: {
+      fen: '7k/7p/4Q2P/8/8/8/5r2/6K1 b - - 0 1',
+      orientation: 'black',
+      steps: [
+        {
+          say: 'Black is losing badly: White has a queen. But look at your king. It has no safe squares, and your pawn is stuck.',
+          highlights: ['g8', 'g7'],
+        },
+        {
+          say: 'If your rook disappeared, you would have no legal moves at all. That is stalemate, and stalemate is a draw!',
+        },
+        {
+          san: 'Rg2+',
+          predict: 'Give away your rook with a check, right next to the White king.',
+          say: 'The rook checks. If White takes it, Black has no legal moves.',
+          arrows: [['g2', 'g1', 'red']],
+        },
+        {
+          san: 'Kxg2',
+          say: 'White takes the rook, and it is stalemate! The game is a draw.',
+        },
+        {
+          say: 'If White had not taken, the rook would keep checking forever. A rook like this is called a desperado, or a crazy rook.',
+        },
+      ],
+    },
+    explain: {
+      q: 'Why is the rook sacrifice a draw?',
+      choices: [
+        'After the rook is taken, Black has no legal moves but is not in check.',
+        'Giving away a rook always draws.',
+        'A king is not allowed to capture a rook.',
+      ],
+      answer: 0,
+      why: 'No legal moves and not in check is stalemate, which ends the game in a draw.',
+    },
+    mistake:
+      'For the winning side: grabbing every piece without looking. Before you capture, ask: will my opponent still have a legal move?',
+    puzzles: [
+      {
+        fen: '7k/7p/4Q2P/8/3q4/7P/6P1/7K b - - 0 1',
+        prompt: 'You are losing. Find the move that saves a draw!',
+        lines: [['Qg1+'], ['Qd1+']],
+        hints: ['Your king and your pawn cannot move.', 'Give away your queen with check, so taking it leaves you with no moves.'],
+        explanation:
+          'Queen to g1 is check. If White takes, Black has no legal moves: stalemate. If the king runs, the queen keeps checking.',
+        orientation: 'black',
+        kind: 'tactic',
+      },
+      {
+        fen: 'k7/p7/P2Q4/8/8/8/2r5/1K6 b - - 0 1',
+        prompt: 'Black is a queen behind. Swindle a draw!',
+        lines: [['Rb2+'], ['Rc1+']],
+        hints: ['Your king and pawn have no moves.', 'Give a check right next to the White king.'],
+        explanation: 'The rook checks. If the king takes it, it is stalemate. If the king runs, the rook keeps checking.',
+        orientation: 'black',
+        kind: 'tactic',
+      },
+    ],
+    check: {
+      q: 'What is a "swindle" in chess?',
+      choices: ['A trick that saves a lost game', 'A rule your opponent broke', 'A fast way to castle'],
+      answer: 0,
+      why: 'Swindles like the stalemate trick turn a lost position into a draw, or even a win.',
+    },
+  },
+  {
     id: 'trade-ahead',
     title: 'Trade When You Are Ahead',
     category: 'endgame',
@@ -414,7 +493,8 @@ export const endgame: Lesson[] = [
   },
   {
     id: 'philidor',
-    title: 'Philidor Defense',
+    title: 'Philidor Position',
+    aka: 'A rook endgame defence. Not the same as the opening called the Philidor Defence.',
     category: 'endgame',
     level: 3,
     bigIdea: 'Defending rook against rook and pawn: keep your rook on your third row until the pawn moves forward, then check from behind.',
@@ -477,7 +557,7 @@ export const endgame: Lesson[] = [
       },
     ],
     check: {
-      q: 'In the Philidor Defense, when do you start checking from behind?',
+      q: 'In the Philidor Position, when do you start checking from behind?',
       choices: [
         'After the pawn steps onto your third row',
         'Right away',

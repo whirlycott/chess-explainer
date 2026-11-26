@@ -53,6 +53,11 @@ export const CONFUSABLE: string[][] = [
   ['opposition', 'square', 'king-activity', 'trade-ahead'],
   ['lucena', 'philidor', 'perpetual'],
   ['cct', 'prophylaxis', 'values'],
+  ['meet-threat', 'escape-check', 'cct'],
+  ['perpetual', 'stalemate-trick', 'philidor'],
+  ['blockade', 'passed-pawn', 'outpost'],
+  ['break-pin', 'pin', 'skewer'],
+  ['trade-attackers', 'trade-ahead', 'prophylaxis'],
 ];
 
 /**
@@ -60,10 +65,10 @@ export const CONFUSABLE: string[][] = [
  * review). Free choice by category is always available too.
  */
 export const PATH: { title: string; ids: string[] }[] = [
-  { title: 'Stage 1 · Safe starts', ids: ['values', 'cct', 'center', 'develop', 'castle', 'queen-early', 'early-mates'] },
-  { title: 'Stage 2 · First wins', ids: ['back-rank', 'ladder', 'queen-mate', 'rook-mate', 'stalemate', 'fork', 'pin', 'skewer', 'trapped-piece'] },
-  { title: 'Stage 3 · Hidden attacks', ids: ['discovered-attack', 'discovered-check', 'double-check', 'remove-defender', 'king-activity', 'square', 'trade-ahead'] },
-  { title: 'Stage 4 · Combinations', ids: ['deflection', 'decoy', 'overloading', 'smothered', 'arabian', 'anastasia', 'boden', 'legal', 'opposition', 'perpetual'] },
-  { title: 'Stage 5 · Plans', ids: ['connect-rooks', 'open-file', 'seventh-rank', 'outpost', 'passed-pawn', 'doubled-pawns', 'bishop-pair', 'fianchetto'] },
+  { title: 'Stage 1 · Safe starts', ids: ['values', 'cct', 'meet-threat', 'center', 'develop', 'castle', 'queen-early', 'early-mates'] },
+  { title: 'Stage 2 · First wins', ids: ['escape-check', 'back-rank', 'ladder', 'queen-mate', 'rook-mate', 'stalemate', 'fork', 'pin', 'skewer', 'trapped-piece'] },
+  { title: 'Stage 3 · Hidden attacks', ids: ['discovered-attack', 'discovered-check', 'double-check', 'remove-defender', 'break-pin', 'king-activity', 'square', 'trade-ahead'] },
+  { title: 'Stage 4 · Combinations', ids: ['deflection', 'decoy', 'overloading', 'smothered', 'arabian', 'anastasia', 'boden', 'legal', 'opposition', 'perpetual', 'stalemate-trick', 'trade-attackers'] },
+  { title: 'Stage 5 · Plans', ids: ['connect-rooks', 'open-file', 'seventh-rank', 'outpost', 'passed-pawn', 'blockade', 'doubled-pawns', 'bishop-pair', 'fianchetto'] },
   { title: 'Stage 6 · Advanced', ids: ['in-between', 'greek-gift', 'bad-bishop', 'weak-squares', 'iqp', 'prophylaxis', 'pawn-storm', 'lucena', 'philidor'] },
 ];
