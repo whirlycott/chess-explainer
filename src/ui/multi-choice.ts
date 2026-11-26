@@ -1,6 +1,7 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { shared } from './shared';
 import { narrate, playSfx } from './store';
+import { shuffle } from '../logic/quiz';
 
 export interface AnsweredDetail {
   /** Right on the first try. */
@@ -11,6 +12,8 @@ export interface AnsweredDetail {
 /**
  * Multiple-choice question with one retry: a wrong first answer shows a clue,
  * a second wrong answer reveals the right one with the explanation.
+ * Choices are shown in a shuffled order so the right answer is not always A;
+ * `answer` is still an index into `choices` as given.
  */
 export class MultiChoice extends LitElement {
   static properties = {
@@ -22,6 +25,7 @@ export class MultiChoice extends LitElement {
     _picked: { state: true },
     _wrong: { state: true },
     _done: { state: true },
+    _order: { state: true },
   };
 
   declare question: string;
@@ -32,6 +36,9 @@ export class MultiChoice extends LitElement {
   declare _picked: number | null;
   declare _wrong: number[];
   declare _done: boolean;
+  /** Display order: indexes into `choices`. */
+  declare _order: number[];
+  private _orderKey = '';
 
   constructor() {
     super();
@@ -40,6 +47,7 @@ export class MultiChoice extends LitElement {
     this.answer = 0;
     this.why = '';
     this.clue = '';
+    this._order = [];
     this.reset();
   }
 
@@ -55,6 +63,12 @@ export class MultiChoice extends LitElement {
   }
 
   willUpdate(changed: Map<string, unknown>): void {
+    // Compare by content: callers may pass a fresh array with the same choices on every render.
+    const key = this.choices.join('\u0000');
+    if (key !== this._orderKey) {
+      this._orderKey = key;
+      this._order = shuffle(this.choices.map((_, i) => i), Math.random);
+    }
     if (changed.has('question') && changed.get('question') !== undefined) {
       this.reset();
       narrate(this.question);
@@ -91,11 +105,12 @@ export class MultiChoice extends LitElement {
     return html`
       <p class="q">${this.question}</p>
       <div class="choices" role="group" aria-label="Answer choices">
-        ${this.choices.map((c, i) => {
+        ${this._order.map((i, pos) => {
+          const c = this.choices[i];
           const state =
             this._done && i === this.answer ? 'right' : this._wrong.includes(i) ? 'wrong' : this._done ? 'dim' : '';
           return html`<button class="choice ${state}" ?disabled=${this._done || this._wrong.includes(i)} @click=${() => this.choose(i)}>
-            <span class="letter">${'ABCD'[i]}</span><span>${c}</span>
+            <span class="letter">${'ABCD'[pos]}</span><span>${c}</span>
           </button>`;
         })}
       </div>
