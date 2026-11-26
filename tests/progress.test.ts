@@ -8,6 +8,7 @@ import {
   load,
   recordAnswer,
   save,
+  status,
   weeklyCount,
   weekStart,
   type Answer,
@@ -92,5 +93,61 @@ describe('progress', () => {
     expect(getLesson(load(100, storage), 'pin').box).toBe(1);
     store.set('chess-explainer:v1', '{not json');
     expect(load(100, storage).lessons).toEqual({});
+  });
+});
+
+describe('named openings', () => {
+  const T = 1000;
+  const openingIds = new Set(['italian', 'london', 'french', 'sicilian', 'scotch']);
+
+  function climb(id: string, keys: string[]): ReturnType<typeof emptyState> {
+    let s = emptyState(T);
+    s = completeLesson(s, id, T);
+    let day = T;
+    for (let i = 0; i < 6; i++) {
+      for (const key of keys) s = recordAnswer(s, id, { correct: true, type: 'move', positionKey: key, hintsUsed: 0 }, day);
+      day += 40;
+    }
+    return s;
+  }
+
+  it('needs both sides of the board and the plan question to master an opening', () => {
+    expect(isMastered(getLesson(climb('italian', ['italian:p0', 'italian:p1']), 'italian'), 'opening')).toBe(false);
+    expect(isMastered(getLesson(climb('italian', ['italian:p0', 'italian:m0']), 'italian'), 'opening')).toBe(false);
+    const all = getLesson(climb('italian', ['italian:p0', 'italian:m0', 'italian:plan']), 'italian');
+    expect(isMastered(all, 'opening')).toBe(true);
+    expect(status(all, 'opening')).toBe('mastered');
+  });
+
+  it('only reviews openings in the repertoire, at most three a day', () => {
+    let s = emptyState(T);
+    for (const id of ['fork', 'pin', ...openingIds]) s = completeLesson(s, id, T);
+    expect(dueLessons(s, T, { openingIds })).toEqual(['fork', 'pin']);
+    s = { ...s, repertoire: { white: 'italian', e4: 'french', d4: 'london' } };
+    s = completeLesson(s, 'sicilian', T);
+    const due = dueLessons(s, T, { openingIds });
+    expect(due.filter((id) => openingIds.has(id)).sort()).toEqual(['french', 'italian', 'london']);
+    expect(due).toContain('fork');
+    expect(due).not.toContain('sicilian');
+  });
+
+  it('respects a custom cap on opening items', () => {
+    let s = emptyState(T);
+    const ids = ['a', 'b', 'c', 'd'];
+    for (const id of ids) s = completeLesson(s, id, T);
+    s = { ...s, repertoire: { white: 'a', e4: 'b', d4: 'c' } };
+    const due = dueLessons(s, T, { openingIds: new Set(ids), openingCap: 2 });
+    expect(due).toHaveLength(2);
+  });
+
+  it('starts with an empty repertoire and keeps one through save and load', () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+    } as unknown as Storage;
+    expect(load(T, storage).repertoire).toEqual({ white: null, e4: null, d4: null });
+    save({ ...emptyState(T), repertoire: { white: 'london', e4: null, d4: 'queens-gambit' } }, storage);
+    expect(load(T, storage).repertoire).toEqual({ white: 'london', e4: null, d4: 'queens-gambit' });
   });
 });

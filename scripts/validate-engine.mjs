@@ -75,9 +75,19 @@ function terminalScore(game) {
 const engine = makeEngine();
 await engine.init();
 
+// Every puzzle, including the "Meeting it" puzzle of each named opening.
+const PUZZLES = LESSONS.flatMap((lesson) => [
+  ...lesson.puzzles.map((puzzle, i) => [`${lesson.id}#${i}`, puzzle]),
+  ...(lesson.opening ? [[`${lesson.id}#meeting`, lesson.opening.meeting.puzzle]] : []),
+]);
+const WALKTHROUGHS = LESSONS.flatMap((lesson) => [
+  [lesson.id, lesson.walkthrough],
+  ...(lesson.opening ? [[`${lesson.id} meeting`, lesson.opening.meeting.walkthrough]] : []),
+]);
+
 let problems = 0;
-for (const lesson of LESSONS) {
-  for (const [i, puzzle] of lesson.puzzles.entries()) {
+for (const [label, puzzle] of PUZZLES) {
+  {
     const kind = puzzle.kind ?? 'tactic';
     const tolerance = kind === 'tactic' ? TACTIC_TOLERANCE : PLAN_TOLERANCE;
     for (const line of puzzle.lines) {
@@ -101,7 +111,7 @@ for (const lesson of LESSONS) {
       const tag = ok ? 'ok ' : 'BAD';
       if (!ok) problems++;
       console.log(
-        `${tag} ${lesson.id}#${i} move ${m / 2 + 1} ${line[m].padEnd(7)} engine ${bestSan.padEnd(7)} best ${bestScore} after ${after} (${kind})`,
+        `${tag} ${label} move ${m / 2 + 1} ${line[m].padEnd(7)} engine ${bestSan.padEnd(7)} best ${bestScore} after ${after} (${kind})`,
       );
       game.move(line[m]);
       if (m + 1 < line.length) game.move(line[m + 1]);
@@ -114,9 +124,9 @@ for (const lesson of LESSONS) {
 // standards, so they can be reviewed by hand. Some are deliberate mistakes
 // that the lesson punishes.
 console.log('\nWalkthrough moves the engine dislikes (review by hand):');
-for (const lesson of LESSONS) {
-  const game = resolveStart(lesson.walkthrough);
-  for (const step of lesson.walkthrough.steps) {
+for (const [label, walkthrough] of WALKTHROUGHS) {
+  const game = resolveStart(walkthrough);
+  for (const step of walkthrough.steps) {
     if (!step.san) continue;
     const fen = game.fen();
     const { score: bestScore, best } = await engine.evaluate(fen);
@@ -125,7 +135,7 @@ for (const lesson of LESSONS) {
     const after = probe.isGameOver() ? -terminalScore(probe) : -(await engine.evaluate(probe.fen())).score;
     const bestSan = new Chess(fen).move({ from: best.slice(0, 2), to: best.slice(2, 4), promotion: best[4] }).san;
     if (bestSan !== step.san && bestScore - after > 150 && !(bestScore > 90000 && after > 90000)) {
-      console.log(`  ${lesson.id}: ${step.san.padEnd(7)} engine ${bestSan.padEnd(7)} best ${bestScore} after ${after}`);
+      console.log(`  ${label}: ${step.san.padEnd(7)} engine ${bestSan.padEnd(7)} best ${bestScore} after ${after}`);
     }
     game.move(step.san);
   }

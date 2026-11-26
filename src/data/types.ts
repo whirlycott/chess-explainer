@@ -1,4 +1,4 @@
-export type CategoryId = 'thinking' | 'opening' | 'tactics' | 'mates' | 'middlegame' | 'endgame';
+export type CategoryId = 'thinking' | 'opening' | 'tactics' | 'mates' | 'middlegame' | 'endgame' | 'openings';
 
 export type Level = 1 | 2 | 3; // 1 = beginner, 2 = intermediate, 3 = advanced
 
@@ -88,6 +88,36 @@ export interface Lesson {
   /** Practice positions, easiest first. */
   puzzles: Puzzle[];
   check: Question;
+  /** Present only on named-opening lessons (the separate Openings section). */
+  opening?: OpeningInfo;
+}
+
+/** A slot in the learner's three-opening repertoire. */
+export type RepertoireSlot = 'white' | 'e4' | 'd4';
+
+export interface OpeningInfo {
+  /** The defining moves in SAN; the position after them is used in "Name That Opening". */
+  moves: string;
+  /** The side the main walkthrough plays. */
+  plays: 'white' | 'black';
+  /** Repertoire slot the main walkthrough fills, if any. */
+  slot?: RepertoireSlot;
+  /** One-sentence plan, used in "Which opening is aiming for this plan?". */
+  plan: string;
+  /** 1 = Starter (after Stage 2), 2 = Club (after Stage 4), 3 = Recognise first (after Stage 5). */
+  tier: 1 | 2 | 3;
+  /** How to meet this opening, shown from the other side of the board. */
+  meeting: Meeting;
+}
+
+export interface Meeting {
+  title: string;
+  /** One or two sentences on the idea, shown before the walkthrough. */
+  idea: string;
+  /** Repertoire slot this side fills (e.g. the Queen's Gambit Declined fills 'd4'). */
+  slot?: RepertoireSlot;
+  walkthrough: Walkthrough;
+  puzzle: Puzzle;
 }
 
 export interface Category {

@@ -7,14 +7,24 @@
  * - A wrong answer moves it down one box (never below 1) and makes it due today.
  * - Mastered = box 5 or higher, at least 2 different positions solved, and at
  *   least one "find the move" answer.
+ * - A named opening is mastered at box 5 or higher once it has been solved from
+ *   both sides of the board (a main puzzle and the "Meeting it" puzzle) and its
+ *   plan question has been answered.
+ * - Daily Review only includes openings in the learner's repertoire, and at most
+ *   OPENING_REVIEW_CAP of them, so openings never crowd out the core.
  * All functions are pure; callers pass `today` as a day number.
  */
+
+import type { RepertoireSlot } from '../data/types';
+
+export type { RepertoireSlot };
 
 export const INTERVAL_DAYS = [0, 0, 1, 3, 7, 16, 35] as const;
 export const MAX_BOX = 6;
 export const MASTERY_BOX = 5;
 export const REVIEW_CAP = 12;
 export const WEEKLY_GOAL = 30;
+export const OPENING_REVIEW_CAP = 3;
 
 export type ItemType = 'move' | 'name' | 'idea' | 'concept' | 'explain';
 
@@ -40,9 +50,13 @@ export interface Settings {
   sound: boolean;
 }
 
+/** The learner's chosen openings: one lesson id per slot. */
+export type Repertoire = Record<RepertoireSlot, string | null>;
+
 export interface ProgressState {
   version: 1;
   lessons: Record<string, LessonProgress>;
+  repertoire: Repertoire;
   week: { start: number; count: number };
   settings: Settings;
 }
@@ -65,7 +79,13 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export function emptyState(today: number): ProgressState {
-  return { version: 1, lessons: {}, week: { start: weekStart(today), count: 0 }, settings: { ...DEFAULT_SETTINGS } };
+  return {
+    version: 1,
+    lessons: {},
+    repertoire: { white: null, e4: null, d4: null },
+    week: { start: weekStart(today), count: 0 },
+    settings: { ...DEFAULT_SETTINGS },
+  };
 }
 
 /** Local calendar day number (days since 1970-01-01 in local time). */
@@ -131,25 +151,53 @@ export function recordAnswer(state: ProgressState, id: string, answer: Answer, t
   return { ...withLesson(state, id, lp), week };
 }
 
-export function isMastered(lp: LessonProgress): boolean {
+export type LessonKind = 'core' | 'opening';
+
+export function isMastered(lp: LessonProgress, kind: LessonKind = 'core'): boolean {
+  if (kind === 'opening') {
+    return (
+      lp.box >= MASTERY_BOX &&
+      lp.positions.some((k) => /:p\d+$/.test(k)) &&
+      lp.positions.some((k) => k.endsWith(':m0')) &&
+      lp.positions.some((k) => k.endsWith(':plan'))
+    );
+  }
   return lp.box >= MASTERY_BOX && lp.positions.length >= 2 && lp.movesSolved >= 1;
 }
 
 export type Status = 'new' | 'learning' | 'mastered';
 
-export function status(lp: LessonProgress): Status {
-  if (isMastered(lp)) return 'mastered';
+export function status(lp: LessonProgress, kind: LessonKind = 'core'): Status {
+  if (isMastered(lp, kind)) return 'mastered';
   if (lp.box > 0 || lp.lessonDone) return 'learning';
   return 'new';
 }
 
+export interface DueOptions {
+  cap?: number;
+  /** Ids of named-opening lessons; these are reviewed only if in the repertoire. */
+  openingIds?: Set<string>;
+  openingCap?: number;
+}
+
 /** Lessons due for review today, most overdue first, capped. */
-export function dueLessons(state: ProgressState, today: number, cap = REVIEW_CAP): string[] {
-  return Object.entries(state.lessons)
+export function dueLessons(state: ProgressState, today: number, options: DueOptions = {}): string[] {
+  const { cap = REVIEW_CAP, openingIds = new Set<string>(), openingCap = OPENING_REVIEW_CAP } = options;
+  const chosen = new Set(Object.values(state.repertoire ?? {}).filter((id): id is string => !!id));
+  let openings = 0;
+  const out: string[] = [];
+  const sorted = Object.entries(state.lessons)
     .filter(([, lp]) => lp.box >= 1 && lp.due <= today)
-    .sort(([, a], [, b]) => a.due - b.due || a.box - b.box)
-    .slice(0, cap)
-    .map(([id]) => id);
+    .sort(([, a], [, b]) => a.due - b.due || a.box - b.box);
+  for (const [id] of sorted) {
+    if (out.length >= cap) break;
+    if (openingIds.has(id)) {
+      if (!chosen.has(id) || openings >= openingCap) continue;
+      openings += 1;
+    }
+    out.push(id);
+  }
+  return out;
 }
 
 export function weeklyCount(state: ProgressState, today: number): number {
@@ -166,7 +214,13 @@ export function load(today: number, storage: Storage | undefined = globalThis.lo
     if (!raw) return emptyState(today);
     const parsed = JSON.parse(raw) as ProgressState;
     if (parsed.version !== 1) return emptyState(today);
-    return { ...emptyState(today), ...parsed, settings: { ...DEFAULT_SETTINGS, ...parsed.settings } };
+    const empty = emptyState(today);
+    return {
+      ...empty,
+      ...parsed,
+      repertoire: { ...empty.repertoire, ...parsed.repertoire },
+      settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+    };
   } catch {
     return emptyState(today);
   }

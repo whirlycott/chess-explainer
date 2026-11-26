@@ -1,4 +1,4 @@
-import { CONFUSABLE, LESSONS, lessonById } from '../data';
+import { CONFUSABLE, LESSONS, isOpening, lessonById } from '../data';
 import type { CategoryId, Lesson, Puzzle, Question } from '../data/types';
 
 /** A seeded random number generator (mulberry32) so quizzes are testable. */
@@ -62,10 +62,14 @@ function overlaps(a: string, b: string): boolean {
 /** Lessons whose puzzles are really examples of other tactics; skip them in "name" items. */
 const NOT_NAMEABLE = new Set(['cct']);
 
-/** Pick `n` wrong answers for a lesson, preferring easily-confused strategies. */
+/**
+ * Pick `n` wrong answers for a lesson, preferring easily-confused strategies.
+ * Named openings and core strategies are never mixed as answer choices.
+ */
 export function distractors(id: string, n: number, rand: () => number): Lesson[] {
   const lesson = lessonById(id)!;
-  const allowed = (l: Lesson) => l.id !== id && !overlaps(id, l.id);
+  const opening = isOpening(id);
+  const allowed = (l: Lesson) => l.id !== id && !overlaps(id, l.id) && isOpening(l.id) === opening;
   const confusable = shuffle(
     [...new Set(CONFUSABLE.filter((g) => g.includes(id)).flat())].map((x) => lessonById(x)!).filter(allowed),
     rand,
@@ -83,7 +87,7 @@ export function distractors(id: string, n: number, rand: () => number): Lesson[]
 export type QuizItem =
   | { kind: 'move'; lessonId: string; positionKey: string; puzzle: Puzzle }
   | { kind: 'name'; lessonId: string; positionKey: string; puzzle: Puzzle; choices: string[]; answer: number }
-  | { kind: 'idea'; lessonId: string; text: string; choices: string[]; answer: number }
+  | { kind: 'idea'; lessonId: string; positionKey?: string; text: string; choices: string[]; answer: number }
   | { kind: 'concept'; lessonId: string; question: Question };
 
 function choicesFor(lesson: Lesson, rand: () => number): { choices: string[]; answer: number } {
@@ -92,6 +96,7 @@ function choicesFor(lesson: Lesson, rand: () => number): { choices: string[]; an
 }
 
 export function makeItem(lesson: Lesson, kind: QuizItem['kind'], rand: () => number): QuizItem {
+  if (lesson.opening) return makeOpeningItem(lesson, kind, rand);
   const p = Math.floor(rand() * lesson.puzzles.length);
   const positionKey = `${lesson.id}:p${p}`;
   const puzzle = lesson.puzzles[p];
@@ -108,7 +113,35 @@ export function makeItem(lesson: Lesson, kind: QuizItem['kind'], rand: () => num
   }
 }
 
-export type QuizMode = 'mixed' | 'name' | 'move' | 'review';
+/**
+ * Items for a named opening:
+ * - "move" draws from the main puzzles and the "Meeting it" puzzle (key ":m0"),
+ *   so both sides of the board get practised;
+ * - "name" shows the defining position, never a late one, since move orders transpose;
+ * - "idea" asks which opening is aiming for its plan (key ":plan").
+ */
+function makeOpeningItem(lesson: Lesson, kind: QuizItem['kind'], rand: () => number): QuizItem {
+  const info = lesson.opening!;
+  switch (kind) {
+    case 'move': {
+      const p = Math.floor(rand() * (lesson.puzzles.length + 1));
+      if (p === lesson.puzzles.length) {
+        return { kind, lessonId: lesson.id, positionKey: `${lesson.id}:m0`, puzzle: info.meeting.puzzle };
+      }
+      return { kind, lessonId: lesson.id, positionKey: `${lesson.id}:p${p}`, puzzle: lesson.puzzles[p] };
+    }
+    case 'name': {
+      const puzzle: Puzzle = { setup: info.moves, prompt: '', lines: [], hints: [], explanation: info.plan };
+      return { kind, lessonId: lesson.id, positionKey: `${lesson.id}:name`, puzzle, ...choicesFor(lesson, rand) };
+    }
+    case 'idea':
+      return { kind, lessonId: lesson.id, positionKey: `${lesson.id}:plan`, text: info.plan, ...choicesFor(lesson, rand) };
+    case 'concept':
+      return { kind, lessonId: lesson.id, question: lesson.check };
+  }
+}
+
+export type QuizMode = 'mixed' | 'name' | 'move' | 'review' | 'openings';
 
 export interface BuildOptions {
   mode: QuizMode;
@@ -150,6 +183,12 @@ function pickKind(opts: BuildOptions, lesson: Lesson, rand: () => number): QuizI
   if (opts.mode === 'name') return 'name';
   if (opts.mode === 'move') return 'move';
   if (opts.needsMove?.has(lesson.id)) return 'move';
+  if (lesson.opening) {
+    const r = rand();
+    if (r < 0.4) return 'name';
+    if (r < 0.7) return 'idea';
+    return 'move';
+  }
   const r = rand();
   if (r < 0.45) return 'move';
   if (r < 0.75) return 'name';

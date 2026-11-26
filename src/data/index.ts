@@ -1,10 +1,11 @@
-import type { Category, CategoryId, Lesson } from './types';
+import type { Category, CategoryId, Lesson, RepertoireSlot } from './types';
 import { thinking } from './lessons/thinking';
 import { opening } from './lessons/opening';
 import { tactics } from './lessons/tactics';
 import { mates } from './lessons/mates';
 import { middlegame } from './lessons/middlegame';
 import { endgame } from './lessons/endgame';
+import { openings } from './lessons/openings';
 
 export type * from './types';
 
@@ -17,7 +18,24 @@ export const CATEGORIES: Category[] = [
   { id: 'endgame', title: 'Endgames', blurb: 'Win when only a few pieces are left.', icon: 'r', hue: 75 },
 ];
 
-export const LESSONS: Lesson[] = [...thinking, ...opening, ...tactics, ...mates, ...middlegame, ...endgame];
+/** The separate, optional Openings section. Not part of the Core Path or core mastery. */
+export const OPENINGS_CATEGORY: Category = {
+  id: 'openings',
+  title: 'Named Openings',
+  blurb: 'Famous openings as ideas and plans, and how to meet them.',
+  icon: 'p',
+  hue: 195,
+};
+
+/** Lessons on the Core Path (the six core categories). */
+export const CORE_LESSONS: Lesson[] = [...thinking, ...opening, ...tactics, ...mates, ...middlegame, ...endgame];
+
+/** Named-opening lessons. */
+export const OPENING_LESSONS: Lesson[] = openings;
+
+export const OPENING_IDS: Set<string> = new Set(openings.map((l) => l.id));
+
+export const LESSONS: Lesson[] = [...CORE_LESSONS, ...OPENING_LESSONS];
 
 const BY_ID = new Map(LESSONS.map((l) => [l.id, l]));
 
@@ -30,8 +48,36 @@ export function lessonsIn(category: CategoryId): Lesson[] {
 }
 
 export function categoryById(id: CategoryId): Category {
-  return CATEGORIES.find((c) => c.id === id)!;
+  return id === 'openings' ? OPENINGS_CATEGORY : CATEGORIES.find((c) => c.id === id)!;
 }
+
+export function isOpening(id: string): boolean {
+  return lessonById(id)?.category === 'openings';
+}
+
+/** Suggested Core Path stage after which each opening tier is worth starting. */
+export const TIER_AFTER_STAGE: Record<1 | 2 | 3, number> = { 1: 2, 2: 4, 3: 5 };
+
+export const TIER_NAMES: Record<1 | 2 | 3, string> = { 1: 'Starter', 2: 'Club', 3: 'Recognise first' };
+
+export const SLOT_NAMES: Record<RepertoireSlot, string> = {
+  white: 'When I play White',
+  e4: 'When White opens with the king pawn (e4)',
+  d4: 'When White opens with the queen pawn (d4)',
+};
+
+/** Lesson ids that can fill a repertoire slot, with the label to show for each. */
+export function repertoireOptions(slot: RepertoireSlot): { id: string; label: string }[] {
+  const out: { id: string; label: string }[] = [];
+  for (const l of OPENING_LESSONS) {
+    if (l.opening!.slot === slot) out.push({ id: l.id, label: l.title });
+    else if (l.opening!.meeting.slot === slot) out.push({ id: l.id, label: l.opening!.meeting.title });
+  }
+  return out;
+}
+
+/** A starter repertoire, from the education review. */
+export const STARTER_KIT: Record<RepertoireSlot, string> = { white: 'italian', e4: 'italian', d4: 'queens-gambit' };
 
 /**
  * Groups of strategies that look alike. Quizzes draw wrong answers from the
@@ -58,6 +104,11 @@ export const CONFUSABLE: string[][] = [
   ['blockade', 'passed-pawn', 'outpost'],
   ['break-pin', 'pin', 'skewer'],
   ['trade-attackers', 'trade-ahead', 'prophylaxis'],
+  // Named openings
+  ['italian', 'ruy-lopez', 'scotch'],
+  ['french', 'caro-kann', 'scandinavian'],
+  ['queens-gambit', 'london', 'kings-indian'],
+  ['english', 'sicilian'],
 ];
 
 /**
