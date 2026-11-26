@@ -277,7 +277,7 @@ export class ChessBoard extends LitElement {
           const style = dragging
             ? `transform: translate(calc(${x * 100}% + ${this._drag!.x}px), calc(${y * 100}% + ${this._drag!.y}px)) scale(1.12)`
             : `transform: translate(${x * 100}%, ${y * 100}%)`;
-          return html`<div class="piece ${dragging ? 'dragging' : ''} ${leaving ? 'leaving' : ''}" style=${style}>
+          return html`<div class="piece ${dragging ? 'dragging' : ''} ${leaving ? 'leaving' : ''}" data-square=${p.square} style=${style}>
             ${pieceSvg(p.color, p.type)}
           </div>`;
         })}

@@ -37,7 +37,8 @@ push to `main` (or by hand from the Actions tab). In the repository settings, se
 ## Check it
 
 ```sh
-npm test                    # content legality + logic tests
+npx playwright install chromium   # once, for the browser tests
+npm test                    # content legality, logic, and browser (animation) tests
 npm run validate:engine     # Stockfish cross-check of every puzzle answer
 ```
 

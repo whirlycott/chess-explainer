@@ -8,7 +8,9 @@ chess.js for rules, optional Three.js 3D board. Design and pedagogy: `docs/PLAN.
 
 - `npm install` — install dependencies.
 - `npm run dev` — live local development server (Vite).
-- `npm test` — run the Vitest suite (content legality, puzzle judging, spaced repetition, quizzes, piece tracking).
+- `npm test` — run the Vitest suite: unit tests (content legality, puzzle judging, spaced repetition, quizzes,
+  piece tracking) and browser tests in `tests/browser/` (piece animation, lesson flow) in headless Chromium.
+  First time on a machine: `npx playwright install chromium`.
 - `npm run build` — type-check (`tsc --noEmit`) and build static files into `dist/`.
 - `npm run preview` — serve the built `dist/` locally.
 - `npm run validate:engine [depth]` — cross-check every puzzle answer with Stockfish (WASM, runs in Node).
