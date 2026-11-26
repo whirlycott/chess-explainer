@@ -137,7 +137,9 @@ export class LessonView extends LitElement {
     this._answered = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     const l = this.lesson!;
-    if (p === 'meet-practice') this._puzzleDone = false;
+    // Practice always starts fresh, including when the lesson is reviewed again.
+    if (p === 'practice') this._puzzle = 0;
+    if (p === 'practice' || p === 'meet-practice') this._puzzleDone = false;
     if (p === 'example' || p === 'meet') {
       this.buildFrames(this.walk);
       if (p === 'meet') narrate(`${l.opening!.meeting.title}. ${l.opening!.meeting.idea}`);
